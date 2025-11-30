@@ -22,6 +22,8 @@ class LlistaPersonalitzada {
   List<Llibre> get llibres => List.unmodifiable(_llibres);
   List<Usuari> get usuaris => List.unmodifiable(_usuaris);
 
+  int get numLlibres => _llibres.length;
+
   // Mètode toJson()
   Map<String, dynamic> toJson() {
     return {
