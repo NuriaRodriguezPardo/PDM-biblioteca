@@ -15,7 +15,7 @@ class AppBiblio extends StatelessWidget {
       autor: 'Carlos Ruiz Zafón',
       idioma: 'Català',
       stock: 5,
-      mitjanaPuntuacio: 4.5,
+      valoracions: null,
       urlImatge: 'https://m.media-amazon.com/images/I/91r1eQ4JwpL.jpg',
       tags: ['misteri', 'novel·la', 'clàssic'],
     );

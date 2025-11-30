@@ -26,7 +26,7 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
       idioma: 'Español',
       playlist: playy,
       stock: 5,
-      mitjanaPuntuacio: 4.5,
+      valoracions: null,
       urlImatge: null,
       tags: null,
     ),
@@ -36,7 +36,7 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
       autor: 'Antoine de Saint-Exupéry',
       idioma: 'Francés',
       stock: 3,
-      mitjanaPuntuacio: 4.8,
+      valoracions: null,
       urlImatge: null,
     ),
     Llibre(
@@ -45,7 +45,7 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
       autor: 'Gabriel García Márquez',
       idioma: 'Español',
       stock: 2,
-      mitjanaPuntuacio: 4.7,
+      valoracions: null,
       urlImatge: null,
     ),
   ];
@@ -95,11 +95,13 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
               children: [
                 Icon(Icons.star, color: Colors.amber),
                 SizedBox(width: 4),
+                /*
                 Text(
-                  llibre.mitjanaPuntuacio != null
-                      ? llibre.mitjanaPuntuacio!.toStringAsFixed(1)
+                  llibre.valoracions != null
+                      ? llibre.valoracions!.toStringAsFixed(1)
                       : "Sin puntuación",
                 ),
+                */
               ],
             ),
 

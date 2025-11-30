@@ -1,3 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+import 'usuari.dart';
+import 'llibre.dart';
+
 class Valoracio {
   final int id;
   final Usuari usuari;
@@ -11,8 +16,10 @@ class Valoracio {
     required this.llibre,
     required this.puntuacio,
     required this.review,
-  }) : assert(puntuacio >= 0.0 && puntuacio <= 5.0,
-            'La puntuació ha d\'estar entre 0.0 i 5.0.'); 
+  }) : assert(
+         puntuacio >= 0.0 && puntuacio <= 5.0,
+         'La puntuació ha d\'estar entre 0.0 i 5.0.',
+       );
 
   // Mètode toJson()
   Map<String, dynamic> toJson() {
@@ -25,3 +32,4 @@ class Valoracio {
       'review': review,
     };
   }
+}

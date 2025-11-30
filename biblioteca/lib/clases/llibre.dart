@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'canço.dart';
+import 'valoracio.dart';
 
 class Llibre {
   int id;
@@ -11,7 +12,7 @@ class Llibre {
   List<Canco> _playlist;
   int _stock;
   String? urlImatge;
-  double? _mitjanaPuntuacio;
+  List<Valoracio>? _valoracions;
 
   Llibre({
     required this.id,
@@ -21,17 +22,17 @@ class Llibre {
     List<String>? tags,
     List<Canco>? playlist,
     required int stock,
-    double? mitjanaPuntuacio,
+    List<Valoracio>? valoracions,
     this.urlImatge,
   }) : _tags = tags ?? [],
        _playlist = playlist ?? [],
        _stock = stock,
-       _mitjanaPuntuacio = mitjanaPuntuacio;
+       _valoracions = valoracions ?? [];
 
   int get stock => _stock;
-  List<String> get tags => List.unmodifiable(_tags);
-  List<Canco> get playlist => List.unmodifiable(_playlist);
-  double? get mitjanaPuntuacio => _mitjanaPuntuacio;
+  List<String> get tags => _tags;
+  List<Canco> get playlist => _playlist;
+  List<Valoracio>? get valoracions => _valoracions;
 
   bool disponible() => _stock > 0;
 
@@ -59,5 +60,27 @@ class Llibre {
 
   void eliminarCanco(Canco canco) {
     _playlist.remove(canco);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'titol': titol,
+      'autor': autor,
+      'idioma': idioma,
+      // Los campos privados se mapean usando sus getters o el nombre directo si no hay getter.
+      'tags': _tags,
+
+      // Para serializar listas de objetos complejos (Canco y Valoracio),
+      // debemos llamar al .toJson() de CADA objeto dentro de la lista.
+      'playlist': _playlist.map((canco) => canco.toJson()).toList(),
+
+      'stock': _stock,
+      'urlImatge': urlImatge,
+
+      'valoracions': _valoracions != null
+          ? _valoracions!.map((valoracio) => valoracio.toJson()).toList()
+          : null,
+    };
   }
 }

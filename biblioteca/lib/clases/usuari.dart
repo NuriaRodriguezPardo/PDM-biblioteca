@@ -1,7 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+import 'llibre.dart';
+import 'reserva.dart';
+
 class Usuari {
   final int id;
   final String nom;
-  
+
   // Llistes privades
   List<String> _tags;
   List<Llibre> _pendents;
@@ -19,12 +24,12 @@ class Usuari {
     List<Reserva>? reserves,
     List<Usuari>? seguidors,
     List<Usuari>? amics,
-  })  : _tags = tags ?? [],
-        _pendents = pendents ?? [],
-        _llegits = llegits ?? [],
-        _reserves = reserves ?? [],
-        _seguidors = seguidors ?? [],
-        _amics = amics ?? [];
+  }) : _tags = tags ?? [],
+       _pendents = pendents ?? [],
+       _llegits = llegits ?? [],
+       _reserves = reserves ?? [],
+       _seguidors = seguidors ?? [],
+       _amics = amics ?? [];
 
   // Getters
   List<String> get tags => List.unmodifiable(_tags);
@@ -44,7 +49,7 @@ class Usuari {
       'pendents': _pendents.map((l) => l.toJson()).toList(),
       'llegits': _llegits.map((l) => l.toJson()).toList(),
       'reserves': _reserves.map((r) => r.toJson()).toList(),
-      
+
       // Serialització per evitar cicles
       'seguidors': _seguidors.map((u) => {'id': u.id, 'nom': u.nom}).toList(),
       'amics': _amics.map((u) => {'id': u.id, 'nom': u.nom}).toList(),

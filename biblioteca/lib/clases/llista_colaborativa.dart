@@ -1,18 +1,22 @@
-class LlistaCollaborativa {
+import 'llibre.dart';
+import 'usuari.dart';
+import 'dart:convert';
+
+class LlistaPersonalitzada {
   final int id;
   final String nom;
-  
+
   // Llistes privades
   List<Llibre> _llibres;
   List<Usuari> _usuaris;
 
-  LlistaCollaborativa({
+  LlistaPersonalitzada({
     required this.id,
     required this.nom,
     List<Llibre>? llibres,
     List<Usuari>? usuaris,
-  })  : _llibres = llibres ?? [],
-        _usuaris = usuaris ?? [];
+  }) : _llibres = llibres ?? [],
+       _usuaris = usuaris ?? [];
 
   // Getters
   List<Llibre> get llibres => List.unmodifiable(_llibres);
