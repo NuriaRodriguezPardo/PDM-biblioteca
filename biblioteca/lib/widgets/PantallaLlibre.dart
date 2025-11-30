@@ -1,5 +1,6 @@
+import 'package:biblioteca/clases/can%C3%A7o.dart';
 import 'package:flutter/material.dart';
-import '../models/llibre.dart';
+import '../clases/llibre.dart';
 
 class PantallaLlibre extends StatefulWidget {
   static String route = '/PantallaLlibre';
@@ -12,22 +13,25 @@ class PantallaLlibre extends StatefulWidget {
   State<PantallaLlibre> createState() => _PantallaLlibreState();
 }
 
+//Ejemplo de playlist
+List<Canco> playy = getCancons();
+
+//Ejemplo de libros
 class _PantallaLlibreState extends State<PantallaLlibre> {
-  
-  // ⭐ LISTA DE EJEMPLO AÑADIDA AQUÍ
   final List<Llibre> listaLibros = [
     Llibre(
-      id: 1,
+      id: 0,
       titol: '1984',
       autor: 'George Orwell',
       idioma: 'Español',
+      playlist: playy,
       stock: 5,
       mitjanaPuntuacio: 4.5,
       urlImatge: null,
       tags: null,
     ),
     Llibre(
-      id: 2,
+      id: 1,
       titol: 'El Principito',
       autor: 'Antoine de Saint-Exupéry',
       idioma: 'Francés',
@@ -36,7 +40,7 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
       urlImatge: null,
     ),
     Llibre(
-      id: 3,
+      id: 2,
       titol: 'Cien Años de Soledad',
       autor: 'Gabriel García Márquez',
       idioma: 'Español',
@@ -51,9 +55,7 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
     final llibre = widget.llibre;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(llibre.titol),
-      ),
+      appBar: AppBar(title: Text(llibre.titol)),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Column(
@@ -93,9 +95,11 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
               children: [
                 Icon(Icons.star, color: Colors.amber),
                 SizedBox(width: 4),
-                Text(llibre.mitjanaPuntuacio != null
-                    ? llibre.mitjanaPuntuacio!.toStringAsFixed(1)
-                    : "Sin puntuación"),
+                Text(
+                  llibre.mitjanaPuntuacio != null
+                      ? llibre.mitjanaPuntuacio!.toStringAsFixed(1)
+                      : "Sin puntuación",
+                ),
               ],
             ),
 
@@ -132,7 +136,26 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
 
             SizedBox(height: 30),
 
-            // ⭐ Vista de la lista dentro de este mismo archivo
+            // Vista lista de playlist del libro
+            Text(
+              'Playlist asociada al libro:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Column(
+              children: llibre.playlist
+                  .map(
+                    (canco) => ListTile(
+                      leading: Icon(Icons.music_note),
+                      title: Text(canco.titol),
+                      subtitle: Text(canco.autor),
+                      trailing: Text('${canco.minuts.inMinutes} min'),
+                    ),
+                  )
+                  .toList(),
+            ),
+
+            // Vista de la lista dentro de este mismo archivo
             Text(
               'Otros libros disponibles:',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
