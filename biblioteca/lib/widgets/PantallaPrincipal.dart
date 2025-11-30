@@ -1,154 +1,130 @@
 import 'package:flutter/material.dart';
 import '../clases/llibre.dart';
 import 'PantallaLlibre.dart';
+import 'PantallaBusqueda.dart';
 
-class PantallaPrincipal extends StatefulWidget {
+class PantallaPrincipal extends StatelessWidget {
   const PantallaPrincipal({super.key});
 
-  @override
-  State<PantallaPrincipal> createState() => _PantallaPrincipalState();
-}
-
-class _PantallaPrincipalState extends State<PantallaPrincipal> {
-
-  List<Llibre> llibres = [
+  // Ejemplo de libros
+  static final List<Llibre> listaLibros = [
+    Llibre(
+      id: 0,
+      titol: '1984',
+      autor: 'George Orwell',
+      idioma: 'Español',
+      stock: 5,
+      tags: ['Distopia', 'Clásico'],
+      urlImatge: null,
+      valoracions: [],
+    ),
     Llibre(
       id: 1,
-      titol: "El Senyor dels Anells",
-      autor: "J.R.R. Tolkien",
-      idioma: "Català",
-      stock: 5,
-      tags: ["Fantasia", "Aventura"],
+      titol: 'El Principito',
+      autor: 'Antoine de Saint-Exupéry',
+      idioma: 'Francés',
+      stock: 3,
+      tags: ['Infantil', 'Fábula'],
+      urlImatge: null,
+      valoracions: [],
     ),
     Llibre(
       id: 2,
-      titol: "L'ombra del vent",
-      autor: "Carlos Ruiz Zafón",
-      idioma: "Castellà",
+      titol: 'Cien Años de Soledad',
+      autor: 'Gabriel García Márquez',
+      idioma: 'Español',
       stock: 2,
-      tags: ["Misteri", "Drama"],
-      urlImatge: 'https://m.media-amazon.com/images/I/91r1eQ4JwpL.jpg',
-    ),
-    Llibre(
-      id: 3,
-      titol: "1984",
-      autor: "George Orwell",
-      idioma: "Anglès",
-      stock: 3,
-      tags: ["Distopia", "Política"],
+      tags: ['Realismo mágico', 'Clásico'],
+      valoracions: [],
     ),
   ];
 
-  String _search = "";
-
   @override
   Widget build(BuildContext context) {
-    List<Llibre> llibresFiltrats = llibres
-        .where((l) =>
-            l.titol.toLowerCase().contains(_search.toLowerCase()) ||
-            l.autor.toLowerCase().contains(_search.toLowerCase()))
-        .toList();
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Biblioteca"),
+        title: const Text('Biblioteca'),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.person))
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PantallaBusqueda()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              // Aquí iría la pantalla de usuario
+            },
+          ),
         ],
       ),
-
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            // 🔍 Barra de búsqueda
-            TextField(
-              onChanged: (value) => setState(() => _search = value),
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: "Cerca llibres...",
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            const Text("Novetats", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-
+            const Text('Novedades', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             SizedBox(
               height: 200,
-              child: ListView(
+              child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                children: llibresFiltrats
-                    .map((l) => _buildLlibreCard(l, context))
-                    .toList(),
+                itemCount: listaLibros.length,
+                itemBuilder: (context, index) {
+                  final llibre = listaLibros[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => PantallaLlibre(llibre: llibre)),
+                      );
+                    },
+                    child: Container(
+                      width: 120,
+                      margin: const EdgeInsets.only(right: 10),
+                      child: Column(
+                        children: [
+                          llibre.urlImatge != null
+                              ? Image.network(llibre.urlImatge!, height: 150)
+                              : const Icon(Icons.book, size: 100),
+                          const SizedBox(height: 5),
+                          Text(
+                            llibre.titol,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-
             const SizedBox(height: 20),
-            const Text("Populars", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-
+            const Text('Populares', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
-            SizedBox(
-              height: 200,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: llibresFiltrats
-                    .map((l) => _buildLlibreCard(l, context))
-                    .toList(),
-              ),
+            Column(
+              children: listaLibros.map((llibre) {
+                return ListTile(
+                  leading: llibre.urlImatge != null
+                      ? Image.network(llibre.urlImatge!, width: 50, fit: BoxFit.cover)
+                      : const Icon(Icons.book),
+                  title: Text(llibre.titol),
+                  subtitle: Text(llibre.autor),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => PantallaLlibre(llibre: llibre)),
+                    );
+                  },
+                );
+              }).toList(),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLlibreCard(Llibre llibre, BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PantallaLlibre(llibre: llibre),
-          ),
-        );
-      },
-      child: Container(
-        width: 140,
-        margin: const EdgeInsets.only(right: 16),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
-            BoxShadow(color: Colors.black26, blurRadius: 4),
-          ],
-        ),
-        child: Column(
-          children: [
-            const Icon(Icons.book, size: 60),
-            const SizedBox(height: 8),
-            Text(
-              llibre.titol,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text(
-              llibre.autor,
-              style: const TextStyle(color: Colors.grey),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            
           ],
         ),
       ),
