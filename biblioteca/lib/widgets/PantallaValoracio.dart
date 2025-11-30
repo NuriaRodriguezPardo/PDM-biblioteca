@@ -9,7 +9,7 @@ final List<Valoracio> valoracionsData = [
     id: 0,
     usuari: Usuari(id: 6, nom: "Maria F."),
     llibre: Llibre(id: 0, titol: "1984", autor: "George Orwell", idioma: "Espanyol",
-    playlist: null, stock: 5, mitjanaPuntuacio: 4.5,  urlImatge: null, tags: null,),
+    tags: null, playlist: null, stock: 5,  urlImatge: null, valoracions: null),
     puntuacio: 4.5,
     review:
         "Una trama excel·lent amb un ritme trepidant. El desenvolupament dels personatges és molt profund. Lectura totalment recomanada!",
@@ -17,10 +17,33 @@ final List<Valoracio> valoracionsData = [
 ];
 
 class ReviewCard extends StatelessWidget {
-   static String route = '/PantallaValoracio';
+  static String route = '/PantallaValoracio';
   final Valoracio review;
 
   const ReviewCard({Key? key, required this.review}) : super(key: key);
+
+  // Nou mètode privat per generar la llista de widgets d'estrella
+  List<Widget> _buildEstrelles(double puntuacio) {
+    final fullStars = puntuacio.floor();
+    final bool hasHalfStar = puntuacio % 1 >= 0.25 && puntuacio % 1 <= 0.75;
+    final emptyStars = 5 - puntuacio.ceil();
+
+    final stars = <Widget>[];
+
+    // Estrelles completes
+    for (int i = 0; i < fullStars; i++) {
+      stars.add(const Icon(Icons.star, color: Colors.amber, size: 20));
+    }
+    // Mitja estrella
+    if (hasHalfStar) {
+      stars.add(const Icon(Icons.star_half, color: Colors.amber, size: 20));
+    }
+    // Estrelles buides
+    for (int i = 0; i < emptyStars; i++) {
+      stars.add(const Icon(Icons.star_border, color: Colors.grey, size: 20));
+    }
+    return stars;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,10 +79,12 @@ class ReviewCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                // visualitzacio de la puntuacio
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Row(children: review.getEstrelles()),
+                    // crida al nou metode
+                    Row(children: _buildEstrelles(review.puntuacio)),
                     Text(
                       review.puntuacio.toStringAsFixed(1),
                       style: const TextStyle(
@@ -74,7 +99,6 @@ class ReviewCard extends StatelessWidget {
             ),
             const Divider(height: 25),
 
-  
             Container(
               padding: const EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
@@ -93,7 +117,6 @@ class ReviewCard extends StatelessWidget {
             
             const SizedBox(height: 15),
 
-      
             Row(
               children: [
                 const Icon(Icons.person, size: 18, color: Colors.black54),
@@ -121,22 +144,37 @@ class ReviewCard extends StatelessWidget {
 class ValoracionsApp extends StatelessWidget {
   const ValoracionsApp({Key? key}) : super(key: key);
 
+  // Paleta de colors personalitzada
+  static const Color primaryCustom = Color(0xFF8F7561); // 8F7561
+  static const Color secondaryCustom = Color(0xFF5DA0A7); // 5DA0A7
+  static const Color errorCustom = Color(0xFFA25353); // A25353
+  static const Color backgroundDark = Color(0xFF47594E); // 47594E
+
   @override
   Widget build(BuildContext context) {
+    // Definició del ColorScheme amb els colors personalitzats
+    final ColorScheme customColorScheme = ColorScheme.light(
+      primary: primaryCustom, // Color principal (AppBar, títols)
+      onPrimary: Colors.white, // Text sobre el color principal
+      secondary: secondaryCustom, // Color per Floating Action Buttons
+      onSecondary: Colors.white,
+      surface: Colors.white, // Color de les Cards
+      onSurface: Colors.black87,
+      error: errorCustom, // Color d'error
+    );
+
     return MaterialApp(
-      // Use Catalonian text for the title
       title: 'Pantalla de Valoracions',
       theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
-        fontFamily: 'Roboto', // Default font family
+        // aplicacio de la paleta personalitzada
+        colorScheme: customColorScheme,
+        fontFamily: 'Roboto', 
         useMaterial3: true,
       ),
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Valoracions del Catàleg'),
           centerTitle: true,
-          backgroundColor: Colors.blueGrey,
-          foregroundColor: Colors.white,
         ),
         body: ListView.builder(
           padding: const EdgeInsets.all(10.0),
