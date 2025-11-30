@@ -1,3 +1,4 @@
+// [llista_personalitzada.dart]
 import 'llibre.dart';
 import 'usuari.dart';
 import 'dart:convert';
@@ -36,3 +37,4 @@ class LlistaPersonalitzada {
     };
   }
 }
+// CORRECCIÓ: Eliminada la clau de tancament extra

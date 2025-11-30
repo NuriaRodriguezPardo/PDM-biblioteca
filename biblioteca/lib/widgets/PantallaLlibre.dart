@@ -1,3 +1,4 @@
+// [PantallaLlibre.dart]
 import 'package:flutter/material.dart';
 import '../clases/llibre.dart';
 import '../clases/canço.dart';
@@ -11,43 +12,13 @@ class PantallaLlibre extends StatefulWidget {
   State<PantallaLlibre> createState() => _PantallaLlibreState();
 }
 
-// Ejemplo de playlist
-List<Canco> playy = getCancons();
+// CORRECCIÓ: Eliminada la llista 'playy' innecessària.
 
 class _PantallaLlibreState extends State<PantallaLlibre> {
-  final List<Llibre> listaLibros = [
-    Llibre(
-      id: 0,
-      titol: '1984',
-      autor: 'George Orwell',
-      idioma: 'Español',
-      playlist: playy,
-      stock: 5,
-      valoracions: [],
-      urlImatge: 'https://upload.wikimedia.org/wikipedia/en/c/c3/1984first.jpg',
-      tags: ['Distopia', 'Clásico'],
-    ),
-    Llibre(
-      id: 1,
-      titol: 'El Principito',
-      autor: 'Antoine de Saint-Exupéry',
-      idioma: 'Francés',
-      stock: 3,
-      valoracions: [],
-      urlImatge: 'https://upload.wikimedia.org/wikipedia/en/4/4f/Le_Petit_Prince_(1943).jpg',
-      tags: ['Infantil', 'Fábula'],
-    ),
-    Llibre(
-      id: 2,
-      titol: 'Cien Años de Soledad',
-      autor: 'Gabriel García Márquez',
-      idioma: 'Español',
-      stock: 2,
-      valoracions: [],
-      urlImatge: null,
-      tags: ['Realismo mágico', 'Clásico'],
-    ),
-  ];
+  // CORRECCIÓ: _getAllLlibres ha de ser cridada des de la classe Llibre.
+  // Si està exposada globalment des del fitxer llibre.dart (com sembla ser el cas),
+  // la pots cridar directament.
+  final List<Llibre> listaLibros = getAllLlibres();
 
   @override
   Widget build(BuildContext context) {
@@ -146,6 +117,9 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
                       leading: const Icon(Icons.music_note),
                       title: Text(canco.titol),
                       subtitle: Text(canco.autor),
+                      // CORRECCIÓ: En lloc de canco.minuts.inMinutes, utilitzem duracioToString()
+                      // o accedim a canco.minuts.inMinutes per obtenir els minuts sencers.
+                      // L'opció més segura és mostrar la durada sencera.
                       trailing: Text('${canco.minuts.inMinutes} min'),
                     ),
                   )

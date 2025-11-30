@@ -1,32 +1,48 @@
+// [PantallaValoracio.dart]
 import 'package:flutter/material.dart';
 import '../clases/llibre.dart';
 import '../clases/valoracio.dart';
 import '../clases/usuari.dart';
 
+// Dades simulades per utilitzar en Valoracio
+final Usuari usuariSimulat = Usuari(id: 6, nom: "Maria F.");
+final Llibre llibreSimulat = Llibre(
+  id: 0,
+  titol: "1984",
+  autor: "George Orwell",
+  idioma: "Espanyol",
+  stock: 5,
+);
 
 final List<Valoracio> valoracionsData = [
   Valoracio(
     id: 0,
-    usuari: Usuari(id: 6, nom: "Maria F."),
-    llibre: Llibre(id: 0, titol: "1984", autor: "George Orwell", idioma: "Espanyol",
-    tags: null, playlist: null, stock: 5,  urlImatge: null, valoracions: null),
     puntuacio: 4.5,
     review:
         "Una trama excel·lent amb un ritme trepidant. El desenvolupament dels personatges és molt profund. Lectura totalment recomanada!",
-  )
+  ),
 ];
 
 class ReviewCard extends StatelessWidget {
   static String route = '/PantallaValoracio';
   final Valoracio review;
+  // Hem d'afegir llibre i usuari ja que la classe Valoracio original no els té.
+  final Llibre llibre;
+  final Usuari usuari;
 
-  const ReviewCard({Key? key, required this.review}) : super(key: key);
+  const ReviewCard({
+    Key? key,
+    required this.review,
+    required this.llibre,
+    required this.usuari,
+  }) : super(key: key);
 
   // Nou mètode privat per generar la llista de widgets d'estrella
   List<Widget> _buildEstrelles(double puntuacio) {
     final fullStars = puntuacio.floor();
-    final bool hasHalfStar = puntuacio % 1 >= 0.25 && puntuacio % 1 <= 0.75;
-    final emptyStars = 5 - puntuacio.ceil();
+    // Corregit: Simplificació de la lògica de mitja estrella.
+    final bool hasHalfStar = (puntuacio - fullStars) >= 0.5;
+    final emptyStars = 5 - (fullStars + (hasHalfStar ? 1 : 0));
 
     final stars = <Widget>[];
 
@@ -64,8 +80,9 @@ class ReviewCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // CORRECCIÓ: Descomentat llibre.titol i llibre.autor
                       Text(
-                        review.llibre.titol,
+                        llibre.titol,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -73,7 +90,7 @@ class ReviewCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'per ${review.llibre.autor}',
+                        'Autor: ${llibre.autor}',
                         style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                     ],
@@ -97,39 +114,40 @@ class ReviewCard extends StatelessWidget {
                 ),
               ],
             ),
-            const Divider(height: 25),
+            const SizedBox(height: 10),
 
             Container(
               padding: const EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
                 border: Border(
-                  left: BorderSide(
-                    color: Colors.amber.shade400,
-                    width: 3,
-                  ),
+                  left: BorderSide(color: Colors.amber.shade400, width: 3),
                 ),
               ),
               child: Text(
                 '"${review.review}"',
-                style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
-            
+
             const SizedBox(height: 15),
 
             Row(
               children: [
                 const Icon(Icons.person, size: 18, color: Colors.black54),
                 const SizedBox(width: 5),
+                // CORRECCIÓ: Descomentat usuari.nom i usuari.id
                 Text(
-                  review.usuari.nom,
+                  usuari.nom,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
-                  ' (ID: ${review.usuari.id})',
+                  ' (ID: ${usuari.id})',
                   style: TextStyle(fontSize: 13, color: Colors.grey[500]),
                 ),
               ],
@@ -168,7 +186,7 @@ class ValoracionsApp extends StatelessWidget {
       theme: ThemeData(
         // aplicacio de la paleta personalitzada
         colorScheme: customColorScheme,
-        fontFamily: 'Roboto', 
+        fontFamily: 'Roboto',
         useMaterial3: true,
       ),
       home: Scaffold(
@@ -181,7 +199,12 @@ class ValoracionsApp extends StatelessWidget {
           itemCount: valoracionsData.length,
           itemBuilder: (context, index) {
             final review = valoracionsData[index];
-            return ReviewCard(review: review);
+            // CORRECCIÓ: Cal passar un llibre i un usuari a la ReviewCard
+            return ReviewCard(
+              review: review,
+              llibre: llibreSimulat,
+              usuari: usuariSimulat,
+            );
           },
         ),
       ),

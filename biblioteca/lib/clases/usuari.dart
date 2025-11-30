@@ -32,12 +32,12 @@ class Usuari {
        _amics = amics ?? [];
 
   // Getters
-  List<String> get tags => List.unmodifiable(_tags);
-  List<Llibre> get pendents => List.unmodifiable(_pendents);
-  List<Llibre> get llegits => List.unmodifiable(_llegits);
-  List<Reserva> get reserves => List.unmodifiable(_reserves);
-  List<Usuari> get seguidors => List.unmodifiable(_seguidors);
-  List<Usuari> get amics => List.unmodifiable(_amics);
+  List<String> get tags => _tags;
+  List<Llibre> get pendents => _pendents;
+  List<Llibre> get llegits => _llegits;
+  List<Reserva> get reserves => _reserves;
+  List<Usuari> get seguidors => _seguidors;
+  List<Usuari> get amics => _amics;
 
   // Mètode toJson()
   Map<String, dynamic> toJson() {
