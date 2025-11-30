@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../clases/llibre.dart';
 import 'PantallaLlibre.dart';
-import 'PantallaPrincipal.dart';
+import '../carregaDeDades.dart'; // Importat per getAllLlibres
 
 class PantallaBusqueda extends StatefulWidget {
   const PantallaBusqueda({super.key});
@@ -12,18 +12,18 @@ class PantallaBusqueda extends StatefulWidget {
 
 class _PantallaBusquedaState extends State<PantallaBusqueda> {
   String query = '';
+  // Utilitzem la funció global per obtenir la llista completa de llibres
+  final List<Llibre> allLlibres = getAllLlibres();
 
   @override
   Widget build(BuildContext context) {
-    final resultados = PantallaPrincipal.listaLibros.where((llibre) {
+    final resultados = allLlibres.where((llibre) {
       return llibre.titol.toLowerCase().contains(query.toLowerCase()) ||
           llibre.autor.toLowerCase().contains(query.toLowerCase());
     }).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Buscar libros'),
-      ),
+      appBar: AppBar(title: const Text('Buscar libros')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -49,14 +49,20 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
                         final llibre = resultados[index];
                         return ListTile(
                           leading: llibre.urlImatge != null
-                              ? Image.network(llibre.urlImatge!, width: 50, fit: BoxFit.cover)
+                              ? Image.network(
+                                  llibre.urlImatge!,
+                                  width: 50,
+                                  fit: BoxFit.cover,
+                                )
                               : const Icon(Icons.book),
                           title: Text(llibre.titol),
                           subtitle: Text(llibre.autor),
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => PantallaLlibre(llibre: llibre)),
+                              MaterialPageRoute(
+                                builder: (_) => PantallaLlibre(llibre: llibre),
+                              ),
                             );
                           },
                         );

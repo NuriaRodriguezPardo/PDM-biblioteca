@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import '../clases/llibre.dart';
 import '../clases/usuari.dart';
-import '../clases/canço.dart'; // Importació duplicada (la primera ja existeix)
+import '../clases/canço.dart';
+import '../carregaDeDades.dart'; // Importat per getAllLlibres()
+import 'pantallaBiblioteca.dart';
 
 class PantallaMatching extends StatefulWidget {
   static String route = '/PantallaMatching';
@@ -31,8 +33,8 @@ class _PantallaMatchingState extends State<PantallaMatching> {
   @override
   void initState() {
     super.initState();
-    // 1. Obtener todas las canciones (simulación de carga de datos)
-    _allCancons = getCancons();
+    // 1. Obtener todas las canciones (Simulació amb getCancons del fitxer canço.dart)
+    _allCancons = getAllCancons();
     // 2. Seleccionar las 10 canciones aleatorias y con tags variados
     _canconsMostrades = _seleccionarCanconsAleatories(_allCancons, 10);
   }
@@ -228,16 +230,14 @@ class _PantallaMatchingState extends State<PantallaMatching> {
   }
 }
 
+// CORRECCIÓ: Utilitzem getAllLlibres() del fitxer carregaDeDades.dart (corregit prèviament)
 Llibre _getLlibrePerCanco(Canco canco) {
-  // 1. Obtener todos los libros disponibles (o el set de datos que uses)
-  // Nota: _getAllLlibres es una funció privada del fitxer llibre.dart,
-  // però ja ha estat exposada en el scope global en el teu projecte.
+  // 1. Obtener todos los libros disponibles (Usant la funció global)
   final List<Llibre> allLlibres = getAllLlibres();
 
   // 2. Iterar sobre todos los libros
   for (final llibre in allLlibres) {
     // 3. Comprobar si la lista de canciones del libro contiene la canción seleccionada
-    // CORRECCIÓ: Utilitzem el getter públic 'playlist' en comptes del camp privat '_playlist'
     if (llibre.playlist.contains(canco)) {
       // 4. ¡Coincidencia encontrada! Devolver el libro inmediatamente
       return llibre;
@@ -245,8 +245,6 @@ Llibre _getLlibrePerCanco(Canco canco) {
   }
 
   // 5. Caso de fallback (si la canción no está asociada a ningún libro)
-  // Aquí puedes devolver un libro por defecto, o lanzar una excepción.
-  // Por simplicidad, devolveremos un libro de 'no encontrado'.
   return Llibre(
     id: -1,
     titol: 'Llibre no trobat',

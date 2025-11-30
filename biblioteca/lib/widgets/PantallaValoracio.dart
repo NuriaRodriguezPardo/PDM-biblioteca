@@ -12,6 +12,7 @@ final Llibre llibreSimulat = Llibre(
   autor: "George Orwell",
   idioma: "Espanyol",
   stock: 5,
+  valoracions: [],
 );
 
 final List<Valoracio> valoracionsData = [
@@ -20,6 +21,7 @@ final List<Valoracio> valoracionsData = [
     puntuacio: 4.5,
     review:
         "Una trama excel·lent amb un ritme trepidant. El desenvolupament dels personatges és molt profund. Lectura totalment recomanada!",
+    usuari: usuariSimulat,
   ),
 ];
 

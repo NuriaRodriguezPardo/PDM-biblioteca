@@ -13,7 +13,7 @@ class Llibre {
   List<Canco> _playlist;
   int _stock;
   String? urlImatge;
-  List<Valoracio>? _valoracions;
+  List<Valoracio> _valoracions; // No és nullable
 
   Llibre({
     required this.id,
@@ -23,44 +23,38 @@ class Llibre {
     List<String>? tags,
     List<Canco>? playlist,
     required int stock,
-    List<Valoracio>? valoracions,
+    required List<Valoracio>
+    valoracions, // S'ha de rebre, no inicialitzar buida.
     this.urlImatge,
   }) : _tags = tags ?? [],
        _playlist = playlist ?? [],
        _stock = stock,
-       _valoracions = valoracions ?? [];
+       _valoracions =
+           valoracions; // Utilitzem el valor passat o la llista buida si es gestionés d'una altra manera.
 
   int get stock => _stock;
   List<String> get tags => _tags;
   List<Canco> get playlist => _playlist;
-  List<Valoracio>? get valoracions => _valoracions;
+  List<Valoracio> get valoracions =>
+      _valoracions; // Getter per a la llista de valoracions
 
   bool disponible() => _stock > 0;
 
   Llibre.fromJson(Map<String, dynamic> json)
-    : id = json["id"],
-      titol = json["titol"],
-      autor = json["autor"],
-      idioma = json["idioma"],
+    : id = json["id"] ?? -1,
+      titol = json["titol"] ?? 'Llibre Desconegut',
+      autor = json["autor"] ?? 'Autor Desconegut',
+      idioma = json["idioma"] ?? 'Catala',
       urlImatge = json["urlImatge"],
-      _tags = List<String>.from(
-        json["tags"] ?? [],
-      ), // Modificat: utilitzar 'tags' en comptes de '_tags'
+      _tags = List<String>.from(json["tags"] ?? []),
       _playlist =
-          (json["playlist"]
-                  as List<
-                    dynamic
-                  >?) // Modificat: utilitzar 'playlist' en comptes de '_playlist'
+          (json["playlist"] as List<dynamic>?)
               ?.map((item) => Canco.fromJson(item))
               .toList() ??
           [],
-      _stock =
-          json["stock"], // Modificat: utilitzar 'stock' en comptes de '_stock'
+      _stock = json["stock"] ?? 0,
       _valoracions =
-          (json["valoracions"]
-                  as List<
-                    dynamic
-                  >?) // Modificat: utilitzar 'valoracions' en comptes de '_valoracions'
+          (json["valoracions"] as List<dynamic>?)
               ?.map((item) => Valoracio.fromJson(item))
               .toList() ??
           [];
@@ -91,15 +85,17 @@ class Llibre {
     _playlist.remove(canco);
   }
 
+  // Corregit: mitjanaPuntuacio()
   double? mitjanaPuntuacio() {
-    if (_valoracions == null || _valoracions!.isEmpty) return null;
+    if (_valoracions.isEmpty) return null;
 
     double suma = 0;
-    for (var v in _valoracions!) {
+    // La comprovació de null a _valoracions ja no cal ja que no és nullable
+    for (var v in _valoracions) {
       suma += v.puntuacio;
     }
 
-    return suma / _valoracions!.length;
+    return suma / _valoracions.length;
   }
 
   Map<String, dynamic> toJson() {
@@ -108,101 +104,18 @@ class Llibre {
       'titol': titol,
       'autor': autor,
       'idioma': idioma,
-      // Los campos privados se mapean usando sus getters o el nombre directo si no hay getter.
       'tags': _tags,
 
-      // Para serializar listas de objetos complejos (Canco y Valoracio),
-      // debemos llamar al .toJson() de CADA objeto dentro de la lista.
+      // Serialització de llistes d'objectes complexos
       'playlist': _playlist.map((canco) => canco.toJson()).toList(),
 
       'stock': _stock,
       'urlImatge': urlImatge,
 
-      'valoracions': _valoracions != null
-          ? _valoracions!.map((valoracio) => valoracio.toJson()).toList()
-          : null,
+      // La llista _valoracions no és nullable
+      'valoracions': _valoracions
+          .map((valoracio) => valoracio.toJson())
+          .toList(),
     };
   }
-}
-
-const jsonLlibres = '''
-[
-  {
-    "id": 0,
-    "titol": "1984",
-    "autor": "George Orwell",
-    "idioma": "Español",
-    "playlist": [
-      {
-        "titol": "Si tu supieras",
-        "autor": "F & BB",
-        "id": 0,
-        "minuts": "02:30",
-        "lletra": "...",
-        "tags": ["romantica", "trist"]
-      },
-      {
-        "titol": "En la otra vida",
-        "autor": "Funzo",
-        "id": 1,
-        "minuts": "02:45",
-        "lletra": "...",
-        "tags": ["romantic", "trist"]
-      }
-    ],
-    "stock": 5,
-    "valoracions": [],
-    "urlImatge": "https://upload.wikimedia.org/wikipedia/en/c/c3/1984first.jpg",
-    "tags": [
-      "Distopia",
-      "Clásico"
-    ]
-  },
-  {
-    "id": 1,
-    "titol": "El Principito",
-    "autor": "Antoine de Saint-Exupéry",
-    "idioma": "Francés",
-    "playlist": [],
-    "stock": 3,
-    "valoracions": [],
-    "urlImatge": "https://upload.wikimedia.org/wikipedia/en/4/4f/Le_Petit_Prince_(1943).jpg",
-    "tags": [
-      "Infantil",
-      "Fábula"
-    ]
-  },
-  {
-    "id": 2,
-    "titol": "Cien Años de Soledad",
-    "autor": "Gabriel García Márquez",
-    "idioma": "Español",
-    "playlist": [
-      {
-        "titol": "Remember",
-        "autor": "F & BB",
-        "id": 2,
-        "minuts": "03:15",
-        "lletra": "...",
-        "tags": ["romantic", "feliç"]
-      }
-    ],
-    "stock": 2,
-    "valoracions": [],
-    "urlImatge": null,
-    "tags": [
-      "Realismo mágico",
-      "Clásico"
-    ]
-  }
-]
-''';
-
-List<Llibre> getAllLlibres() {
-  // 1. Decodificar la cadena JSON a una List<dynamic> de objetos Dart (Map<String, dynamic>)
-  List<dynamic> lObjetosDart = jsonDecode(jsonLlibres);
-
-  // 2. Usar .map para iterar sobre la lista dinámica y convertir cada elemento
-  // Map<String, dynamic> a un objeto Llibre usando el factory constructor Llibre.fromJson().
-  return lObjetosDart.map<Llibre>((e) => Llibre.fromJson(e)).toList();
 }
