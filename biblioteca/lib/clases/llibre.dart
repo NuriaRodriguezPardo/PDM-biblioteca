@@ -62,6 +62,17 @@ class Llibre {
     _playlist.remove(canco);
   }
 
+  double? mitjanaPuntuacio() {
+  if (_valoracions == null || _valoracions!.isEmpty) return null;
+
+  double suma = 0;
+  for (var v in _valoracions!) {
+    suma += v.puntuacio;
+  }
+
+  return suma / _valoracions!.length;
+}
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -83,4 +94,6 @@ class Llibre {
           : null,
     };
   }
+
+
 }

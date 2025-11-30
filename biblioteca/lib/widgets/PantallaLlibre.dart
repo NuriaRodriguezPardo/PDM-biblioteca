@@ -1,10 +1,8 @@
-import 'package:biblioteca/clases/can%C3%A7o.dart';
 import 'package:flutter/material.dart';
 import '../clases/llibre.dart';
+import '../clases/canço.dart';
 
 class PantallaLlibre extends StatefulWidget {
-  static String route = '/PantallaLlibre';
-
   final Llibre llibre;
 
   const PantallaLlibre({super.key, required this.llibre});
@@ -13,10 +11,9 @@ class PantallaLlibre extends StatefulWidget {
   State<PantallaLlibre> createState() => _PantallaLlibreState();
 }
 
-//Ejemplo de playlist
+// Ejemplo de playlist
 List<Canco> playy = getCancons();
 
-//Ejemplo de libros
 class _PantallaLlibreState extends State<PantallaLlibre> {
   final List<Llibre> listaLibros = [
     Llibre(
@@ -26,9 +23,9 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
       idioma: 'Español',
       playlist: playy,
       stock: 5,
-      valoracions: null,
-      urlImatge: null,
-      tags: null,
+      valoracions: [],
+      urlImatge: 'https://upload.wikimedia.org/wikipedia/en/c/c3/1984first.jpg',
+      tags: ['Distopia', 'Clásico'],
     ),
     Llibre(
       id: 1,
@@ -36,8 +33,9 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
       autor: 'Antoine de Saint-Exupéry',
       idioma: 'Francés',
       stock: 3,
-      valoracions: null,
-      urlImatge: null,
+      valoracions: [],
+      urlImatge: 'https://upload.wikimedia.org/wikipedia/en/4/4f/Le_Petit_Prince_(1943).jpg',
+      tags: ['Infantil', 'Fábula'],
     ),
     Llibre(
       id: 2,
@@ -45,8 +43,9 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
       autor: 'Gabriel García Márquez',
       idioma: 'Español',
       stock: 2,
-      valoracions: null,
+      valoracions: [],
       urlImatge: null,
+      tags: ['Realismo mágico', 'Clásico'],
     ),
   ];
 
@@ -57,7 +56,7 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
     return Scaffold(
       appBar: AppBar(title: Text(llibre.titol)),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -65,20 +64,20 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
             Center(
               child: llibre.urlImatge != null
                   ? Image.network(llibre.urlImatge!, height: 200)
-                  : Icon(Icons.book, size: 150),
+                  : const Icon(Icons.book, size: 150),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Título y autor
             Text(
               llibre.titol,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             Text(
               'de ${llibre.autor}',
               style: TextStyle(fontSize: 18, color: Colors.grey[700]),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
 
             // Idioma y stock
             Row(
@@ -88,27 +87,24 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
                 Text('Stock: ${llibre.stock}'),
               ],
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
 
-            // Puntuación
+            // Puntuación media
             Row(
               children: [
-                Icon(Icons.star, color: Colors.amber),
-                SizedBox(width: 4),
-                /*
+                const Icon(Icons.star, color: Colors.amber),
+                const SizedBox(width: 4),
                 Text(
-                  llibre.valoracions != null
-                      ? llibre.valoracions!.toStringAsFixed(1)
+                  llibre.mitjanaPuntuacio() != null
+                      ? llibre.mitjanaPuntuacio()!.toStringAsFixed(1)
                       : "Sin puntuación",
                 ),
-                */
               ],
             ),
+            const SizedBox(height: 16),
 
-            SizedBox(height: 16),
-
+            // Tags
             if (llibre.tags.isNotEmpty) ...[
-              SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
@@ -121,10 +117,10 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
                     )
                     .toList(),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
             ],
 
-            // Botón de reservar
+            // Botón reservar
             ElevatedButton(
               onPressed: llibre.disponible()
                   ? () {
@@ -133,22 +129,21 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
                       });
                     }
                   : null,
-              child: Text('Reservar'),
+              child: const Text('Reservar'),
             ),
+            const SizedBox(height: 30),
 
-            SizedBox(height: 30),
-
-            // Vista lista de playlist del libro
+            // Playlist asociada
             Text(
               'Playlist asociada al libro:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Column(
               children: llibre.playlist
                   .map(
                     (canco) => ListTile(
-                      leading: Icon(Icons.music_note),
+                      leading: const Icon(Icons.music_note),
                       title: Text(canco.titol),
                       subtitle: Text(canco.autor),
                       trailing: Text('${canco.minuts.inMinutes} min'),
@@ -157,18 +152,18 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
                   .toList(),
             ),
 
-            // Vista de la lista dentro de este mismo archivo
+            // Otros libros
+            const SizedBox(height: 20),
             Text(
               'Otros libros disponibles:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
-
+            const SizedBox(height: 10),
             Column(
               children: listaLibros
                   .map(
                     (lib) => ListTile(
-                      leading: Icon(Icons.book),
+                      leading: const Icon(Icons.book),
                       title: Text(lib.titol),
                       subtitle: Text(lib.autor),
                       trailing: Text("Stock: ${lib.stock}"),
