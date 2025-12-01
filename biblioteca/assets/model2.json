@@ -1,0 +1,1425 @@
+{
+    "usuaris": [
+        {
+            "id": 101,
+            "nom": "Anna Soler",
+            "tags": [
+                "ficció",
+                "misteri",
+                "història"
+            ],
+            "pendents": [
+                {
+                    "id": 103,
+                    "titol": "El recluso"
+                },
+                {
+                    "id": 115,
+                    "titol": "Los diablos"
+                }
+            ],
+            "llegits": [
+                {
+                    "id": 101,
+                    "titol": "Recupera tu mente, reconquista tu vida"
+                },
+                {
+                    "id": 107,
+                    "titol": "Vera, una historia de amor"
+                },
+                {
+                    "id": 121,
+                    "titol": "Los tres mundos (Serie Julio César 3)"
+                }
+            ],
+            "reserves": [
+                {
+                    "id": 501,
+                    "llibre": {
+                        "id": 105,
+                        "titol": "El susurro del fuego"
+                    },
+                    "data_reserva": "2025-11-20T10:00:00.000Z",
+                    "data_venciment": "2025-11-27T10:00:00.000Z"
+                },
+                {
+                    "id": 504,
+                    "llibre": {
+                        "id": 102,
+                        "titol": "El Filatelista"
+                    },
+                    "data_reserva": "2025-11-23T11:00:00.000Z",
+                    "data_venciment": "2025-11-30T11:00:00.000Z"
+                }
+            ],
+            "seguidors": [
+                {
+                    "id": 102,
+                    "nom": "Marc Vidal"
+                },
+                {
+                    "id": 103,
+                    "nom": "Júlia Casals"
+                }
+            ],
+            "amics": [
+                {
+                    "id": 103,
+                    "nom": "Júlia Casals"
+                },
+                {
+                    "id": 104,
+                    "nom": "David Uclés"
+                }
+            ]
+        },
+        {
+            "id": 102,
+            "nom": "Marc Vidal",
+            "tags": [
+                "història",
+                "novel·la",
+                "thriller"
+            ],
+            "pendents": [
+                {
+                    "id": 104,
+                    "titol": "El último secreto"
+                },
+                {
+                    "id": 110,
+                    "titol": "La sociedad del cansancio"
+                }
+            ],
+            "llegits": [
+                {
+                    "id": 106,
+                    "titol": "La península de las casas vacías"
+                },
+                {
+                    "id": 117,
+                    "titol": "El círculo de los días"
+                }
+            ],
+            "reserves": [
+                {
+                    "id": 502,
+                    "llibre": {
+                        "id": 114,
+                        "titol": "La muy catastrófica visita al zoo"
+                    },
+                    "data_reserva": "2025-11-21T15:30:00.000Z",
+                    "data_venciment": "2025-11-28T15:30:00.000Z"
+                }
+            ],
+            "seguidors": [
+                {
+                    "id": 101,
+                    "nom": "Anna Soler"
+                }
+            ],
+            "amics": [
+                {
+                    "id": 101,
+                    "nom": "Anna Soler"
+                }
+            ]
+        },
+        {
+            "id": 103,
+            "nom": "Júlia Casals",
+            "tags": [
+                "thriller",
+                "fantasia",
+                "romance"
+            ],
+            "pendents": [
+                {
+                    "id": 111,
+                    "titol": "Alas de ónix (Empíreo 3)"
+                }
+            ],
+            "llegits": [
+                {
+                    "id": 102,
+                    "titol": "El Filatelista"
+                },
+                {
+                    "id": 118,
+                    "titol": "Un Amor De Diciembre"
+                }
+            ],
+            "reserves": [
+                {
+                    "id": 503,
+                    "llibre": {
+                        "id": 111,
+                        "titol": "Alas de ónix (Empíreo 3)"
+                    },
+                    "data_reserva": "2025-11-22T08:00:00.000Z",
+                    "data_venciment": "2025-11-29T08:00:00.000Z"
+                }
+            ],
+            "seguidors": [
+                {
+                    "id": 101,
+                    "nom": "Anna Soler"
+                },
+                {
+                    "id": 102,
+                    "nom": "Marc Vidal"
+                }
+            ],
+            "amics": [
+                {
+                    "id": 101,
+                    "nom": "Anna Soler"
+                }
+            ]
+        },
+        {
+            "id": 104,
+            "nom": "David Uclés",
+            "tags": [
+                "ciència",
+                "autoajuda",
+                "assaig"
+            ],
+            "pendents": [
+                {
+                    "id": 109,
+                    "titol": "Reconciliación"
+                }
+            ],
+            "llegits": [
+                {
+                    "id": 110,
+                    "titol": "La sociedad del cansancio"
+                },
+                {
+                    "id": 101,
+                    "titol": "Recupera tu mente, reconquista tu vida"
+                }
+            ],
+            "reserves": [],
+            "seguidors": [
+                {
+                    "id": 101,
+                    "nom": "Anna Soler"
+                }
+            ],
+            "amics": [
+                {
+                    "id": 101,
+                    "nom": "Anna Soler"
+                }
+            ]
+        }
+    ],
+    "llibres": [
+        {
+            "id": 101,
+            "titol": "Recupera tu mente, reconquista tu vida",
+            "autor": "Marián Rojas Estapé",
+            "idioma": "Castellà",
+            "tags": [
+                "autoajuda",
+                "psicologia"
+            ],
+            "playlist": [
+                {
+                    "id": 701,
+                    "titol": "Calma Mental",
+                    "autor": "Ambient Sound",
+                    "minuts": "03:45",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "escoltada": "2025-11-20T10:00:00.000Z",
+                    "tags": [
+                        "autoajuda",
+                        "relax"
+                    ]
+                }
+            ],
+            "stock": 3,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 301,
+                    "usuari": {
+                        "id": 101,
+                        "nom": "Anna Soler"
+                    },
+                    "puntuacio": 4.5,
+                    "review": "Lectura essencial i pràctica per a l'estrès."
+                },
+                {
+                    "id": 302,
+                    "usuari": {
+                        "id": 104,
+                        "nom": "David Uclés"
+                    },
+                    "puntuacio": 4.0,
+                    "review": "Bons consells, però una mica repetitiu."
+                }
+            ]
+        },
+        {
+            "id": 102,
+            "titol": "El Filatelista",
+            "autor": "Nicolas Feuz",
+            "idioma": "Castellà",
+            "tags": [
+                "thriller",
+                "misteri"
+            ],
+            "playlist": [
+                {
+                    "id": 702,
+                    "titol": "A la Foscor",
+                    "autor": "Banda BSO",
+                    "minuts": "02:50",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "thriller",
+                        "misteri"
+                    ]
+                }
+            ],
+            "stock": 1,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 303,
+                    "usuari": {
+                        "id": 103,
+                        "nom": "Júlia Casals"
+                    },
+                    "puntuacio": 4.0,
+                    "review": "Intriga fins a l'última pàgina."
+                }
+            ]
+        },
+        {
+            "id": 103,
+            "titol": "El recluso",
+            "autor": "Freida McFadden",
+            "idioma": "Castellà",
+            "tags": [
+                "suspens",
+                "intriga"
+            ],
+            "playlist": [
+                {
+                    "id": 703,
+                    "titol": "Sense Sortida",
+                    "autor": "Noise Band",
+                    "minuts": "03:15",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "suspens",
+                        "thriller"
+                    ]
+                }
+            ],
+            "stock": 0,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 304,
+                    "usuari": {
+                        "id": 101,
+                        "nom": "Anna Soler"
+                    },
+                    "puntuacio": 5.0,
+                    "review": "Gira de guió impressionant!"
+                }
+            ]
+        },
+        {
+            "id": 104,
+            "titol": "El último secreto",
+            "autor": "Dan Brown",
+            "idioma": "Castellà",
+            "tags": [
+                "thriller",
+                "codis",
+                "història"
+            ],
+            "playlist": [
+                {
+                    "id": 704,
+                    "titol": "Temple Medieval",
+                    "autor": "Orquestra",
+                    "minuts": "04:55",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "història",
+                        "codis"
+                    ]
+                }
+            ],
+            "stock": 7,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 105,
+            "titol": "El susurro del fuego",
+            "autor": "Javier Castillo",
+            "idioma": "Castellà",
+            "tags": [
+                "misteri",
+                "drama"
+            ],
+            "playlist": [
+                {
+                    "id": 705,
+                    "titol": "Cendres",
+                    "autor": "Foc Dibuixat",
+                    "minuts": "04:10",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "misteri",
+                        "drama"
+                    ]
+                }
+            ],
+            "stock": 4,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 305,
+                    "usuari": {
+                        "id": 102,
+                        "nom": "Marc Vidal"
+                    },
+                    "puntuacio": 5.0,
+                    "review": "Molt ben escrit i apassionant."
+                }
+            ]
+        },
+        {
+            "id": 106,
+            "titol": "La península de las casas vacías",
+            "autor": "David Uclés",
+            "idioma": "Castellà",
+            "tags": [
+                "ficció",
+                "rural"
+            ],
+            "playlist": [
+                {
+                    "id": 706,
+                    "titol": "Velles Parets",
+                    "autor": "Sons de Natura",
+                    "minuts": "03:00",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "ficció",
+                        "rural"
+                    ]
+                }
+            ],
+            "stock": 2,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 306,
+                    "usuari": {
+                        "id": 102,
+                        "nom": "Marc Vidal"
+                    },
+                    "puntuacio": 4.2,
+                    "review": "Una bona immersió en un ambient solitari."
+                }
+            ]
+        },
+        {
+            "id": 107,
+            "titol": "Vera, una historia de amor",
+            "autor": "Juan del Val",
+            "idioma": "Castellà",
+            "tags": [
+                "novel·la",
+                "amor",
+                "actualitat"
+            ],
+            "playlist": [
+                {
+                    "id": 707,
+                    "titol": "Tu i Jo",
+                    "autor": "Pop Romàntic",
+                    "minuts": "03:50",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "novel·la",
+                        "amor"
+                    ]
+                }
+            ],
+            "stock": 5,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 307,
+                    "usuari": {
+                        "id": 101,
+                        "nom": "Anna Soler"
+                    },
+                    "puntuacio": 3.8,
+                    "review": "Més centrat en la reflexió que en la història d'amor."
+                }
+            ]
+        },
+        {
+            "id": 108,
+            "titol": "El niño que perdió la guerra",
+            "autor": "Julia Navarro",
+            "idioma": "Castellà",
+            "tags": [
+                "història",
+                "guerra",
+                "drama"
+            ],
+            "playlist": [
+                {
+                    "id": 708,
+                    "titol": "Silenci al Front",
+                    "autor": "Violins Tristos",
+                    "minuts": "05:00",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "història",
+                        "drama"
+                    ]
+                }
+            ],
+            "stock": 1,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 109,
+            "titol": "Reconciliación",
+            "autor": "Juan Carlos I",
+            "idioma": "Castellà",
+            "tags": [
+                "no-ficció",
+                "memòries",
+                "política"
+            ],
+            "playlist": [
+                {
+                    "id": 709,
+                    "titol": "El Discurs",
+                    "autor": "Marxes Reials",
+                    "minuts": "02:40",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "política",
+                        "història"
+                    ]
+                }
+            ],
+            "stock": 10,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 110,
+            "titol": "La sociedad del cansancio",
+            "autor": "Byung-Chul Han",
+            "idioma": "Castellà",
+            "tags": [
+                "filosofia",
+                "assaig"
+            ],
+            "playlist": [
+                {
+                    "id": 710,
+                    "titol": "Pensaments Lents",
+                    "autor": "Jazz Calmat",
+                    "minuts": "04:30",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "filosofia",
+                        "assaig"
+                    ]
+                }
+            ],
+            "stock": 6,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 308,
+                    "usuari": {
+                        "id": 104,
+                        "nom": "David Uclés"
+                    },
+                    "puntuacio": 4.8,
+                    "review": "Profund i molt rellevant per al món actual."
+                }
+            ]
+        },
+        {
+            "id": 111,
+            "titol": "Alas de ónix (Empíreo 3)",
+            "autor": "Rebecca Yarros",
+            "idioma": "Castellà",
+            "tags": [
+                "fantasia",
+                "romance"
+            ],
+            "playlist": [
+                {
+                    "id": 711,
+                    "titol": "Vol de Drac",
+                    "autor": "Música Cèltica",
+                    "minuts": "03:10",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "fantasia",
+                        "romance"
+                    ]
+                }
+            ],
+            "stock": 8,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 309,
+                    "usuari": {
+                        "id": 103,
+                        "nom": "Júlia Casals"
+                    },
+                    "puntuacio": 5.0,
+                    "review": "La millor saga de fantasia juvenil del moment."
+                }
+            ]
+        },
+        {
+            "id": 112,
+            "titol": "Los juegos del hambre 5 - Amanecer en la cosecha",
+            "autor": "Suzanne Collins",
+            "idioma": "Castellà",
+            "tags": [
+                "juvenil",
+                "distopia"
+            ],
+            "playlist": [
+                {
+                    "id": 712,
+                    "titol": "Lluita per Viure",
+                    "autor": "Sintetitzadors",
+                    "minuts": "03:35",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "distopia",
+                        "acció"
+                    ]
+                }
+            ],
+            "stock": 12,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 113,
+            "titol": "El loco Dios en el fin del mundo",
+            "autor": "Javier Cercas",
+            "idioma": "Castellà",
+            "tags": [
+                "novel·la",
+                "viatge"
+            ],
+            "playlist": [
+                {
+                    "id": 713,
+                    "titol": "Camins Desconeguts",
+                    "autor": "Flamenco Fusión",
+                    "minuts": "04:00",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "novel·la",
+                        "viatge"
+                    ]
+                }
+            ],
+            "stock": 3,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 114,
+            "titol": "La muy catastrófica visita al zoo",
+            "autor": "Joël Dicker",
+            "idioma": "Castellà",
+            "tags": [
+                "misteri",
+                "humor"
+            ],
+            "playlist": [
+                {
+                    "id": 714,
+                    "titol": "Pista Falsa",
+                    "autor": "Pop Irònic",
+                    "minuts": "02:55",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "misteri",
+                        "humor"
+                    ]
+                }
+            ],
+            "stock": 4,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 115,
+            "titol": "Los diablos",
+            "autor": "Joe Abercrombie",
+            "idioma": "Castellà",
+            "tags": [
+                "fantasia",
+                "èpica"
+            ],
+            "playlist": [
+                {
+                    "id": 715,
+                    "titol": "El Setge",
+                    "autor": "Música Orquestral",
+                    "minuts": "05:20",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "fantasia",
+                        "èpica"
+                    ]
+                }
+            ],
+            "stock": 2,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 116,
+            "titol": "Mi nombre es Emilia del Valle",
+            "autor": "Isabel Allende",
+            "idioma": "Castellà",
+            "tags": [
+                "ficció",
+                "saga",
+                "dones"
+            ],
+            "playlist": [
+                {
+                    "id": 716,
+                    "titol": "Veu de Llibertat",
+                    "autor": "Cantant Llatina",
+                    "minuts": "03:40",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "ficció",
+                        "drama"
+                    ]
+                }
+            ],
+            "stock": 6,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 310,
+                    "usuari": {
+                        "id": 101,
+                        "nom": "Anna Soler"
+                    },
+                    "puntuacio": 4.7,
+                    "review": "Una història familiar que t'atrapa."
+                }
+            ]
+        },
+        {
+            "id": 117,
+            "titol": "El círculo de los días",
+            "autor": "Ken Follet",
+            "idioma": "Castellà",
+            "tags": [
+                "història",
+                "thriller"
+            ],
+            "playlist": [
+                {
+                    "id": 717,
+                    "titol": "El Secret",
+                    "autor": "Cinema Épic",
+                    "minuts": "05:15",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "història",
+                        "thriller"
+                    ]
+                }
+            ],
+            "stock": 9,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 311,
+                    "usuari": {
+                        "id": 102,
+                        "nom": "Marc Vidal"
+                    },
+                    "puntuacio": 4.9,
+                    "review": "El millor de Follet en anys."
+                },
+                {
+                    "id": 312,
+                    "usuari": {
+                        "id": 104,
+                        "nom": "David Uclés"
+                    },
+                    "puntuacio": 4.8,
+                    "review": "Una història llarga, però amb un ritme perfecte."
+                }
+            ]
+        },
+        {
+            "id": 118,
+            "titol": "Un Amor De Diciembre",
+            "autor": "Lauren Asher",
+            "idioma": "Castellà",
+            "tags": [
+                "romance",
+                "juvenil",
+                "navidad"
+            ],
+            "playlist": [
+                {
+                    "id": 718,
+                    "titol": "Neu i Abraçades",
+                    "autor": "Cantant Indie",
+                    "minuts": "03:05",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "romance",
+                        "navidad"
+                    ]
+                }
+            ],
+            "stock": 5,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 313,
+                    "usuari": {
+                        "id": 103,
+                        "nom": "Júlia Casals"
+                    },
+                    "puntuacio": 4.1,
+                    "review": "Perfecte per a una tarda de manta i xocolata."
+                }
+            ]
+        },
+        {
+            "id": 119,
+            "titol": "Ande, ande, ande, la Mari Morena",
+            "autor": "Megan Maxwell",
+            "idioma": "Castellà",
+            "tags": [
+                "romance",
+                "eròtic",
+                "humor"
+            ],
+            "playlist": [
+                {
+                    "id": 719,
+                    "titol": "Flirting",
+                    "autor": "Pop Divertit",
+                    "minuts": "02:45",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "romance",
+                        "humor"
+                    ]
+                }
+            ],
+            "stock": 7,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 120,
+            "titol": "Astérix en Lusitania",
+            "autor": "René Goscinny",
+            "idioma": "Castellà",
+            "tags": [
+                "còmic",
+                "humor",
+                "aventura"
+            ],
+            "playlist": [
+                {
+                    "id": 720,
+                    "titol": "Viatge a Roma",
+                    "autor": "Fanfarres",
+                    "minuts": "02:10",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "humor",
+                        "aventura"
+                    ]
+                }
+            ],
+            "stock": 15,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 121,
+            "titol": "Los tres mundos (Serie Julio César 3)",
+            "autor": "Santiago Posteguillo",
+            "idioma": "Castellà",
+            "tags": [
+                "història",
+                "roma",
+                "biografia"
+            ],
+            "playlist": [
+                {
+                    "id": 721,
+                    "titol": "Glòria de l'Imperi",
+                    "autor": "Epic History",
+                    "minuts": "04:50",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "història",
+                        "roma"
+                    ]
+                }
+            ],
+            "stock": 4,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 314,
+                    "usuari": {
+                        "id": 101,
+                        "nom": "Anna Soler"
+                    },
+                    "puntuacio": 4.6,
+                    "review": "Posteguillo en estat pur. Ideal per als fans de Roma."
+                }
+            ]
+        },
+        {
+            "id": 122,
+            "titol": "Cuando el viento hable",
+            "autor": "Ángela Banzas",
+            "idioma": "Castellà",
+            "tags": [
+                "thriller",
+                "drama"
+            ],
+            "playlist": [
+                {
+                    "id": 722,
+                    "titol": "El Silenci",
+                    "autor": "Indie Pop",
+                    "minuts": "03:20",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "thriller",
+                        "drama"
+                    ]
+                }
+            ],
+            "stock": 3,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 123,
+            "titol": "Victoria",
+            "autor": "Paloma Sánchez-Garnica",
+            "idioma": "Castellà",
+            "tags": [
+                "guerra civil",
+                "història",
+                "drama"
+            ],
+            "playlist": [
+                {
+                    "id": 723,
+                    "titol": "Temps de Guerra",
+                    "autor": "Clàssica",
+                    "minuts": "06:00",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "guerra",
+                        "drama"
+                    ]
+                }
+            ],
+            "stock": 2,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 124,
+            "titol": "El diablo está entre nosotros",
+            "autor": "Lorenzo Ramírez",
+            "idioma": "Castellà",
+            "tags": [
+                "no-ficció",
+                "investigació"
+            ],
+            "playlist": [
+                {
+                    "id": 724,
+                    "titol": "La Pista",
+                    "autor": "Electrònica",
+                    "minuts": "03:40",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "no-ficció",
+                        "misteri"
+                    ]
+                }
+            ],
+            "stock": 1,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 125,
+            "titol": "Fernando Alonso. Velocidad y Épica",
+            "autor": "Iván Vicario Martín",
+            "idioma": "Castellà",
+            "tags": [
+                "biografia",
+                "esports",
+                "automobilisme"
+            ],
+            "playlist": [
+                {
+                    "id": 725,
+                    "titol": "Pole Position",
+                    "autor": "Rock Dur",
+                    "minuts": "02:30",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "esports",
+                        "automobilisme"
+                    ]
+                }
+            ],
+            "stock": 5,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 126,
+            "titol": "El arte de ser nosotros",
+            "autor": "Inma Rubiales",
+            "idioma": "Castellà",
+            "tags": [
+                "juvenil",
+                "romance"
+            ],
+            "playlist": [
+                {
+                    "id": 726,
+                    "titol": "Primer Petó",
+                    "autor": "Pop Adolescent",
+                    "minuts": "03:15",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "juvenil",
+                        "romance"
+                    ]
+                }
+            ],
+            "stock": 8,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 127,
+            "titol": "La chica del lago",
+            "autor": "Mikel Santiago",
+            "idioma": "Castellà",
+            "tags": [
+                "thriller",
+                "nordic",
+                "misteri"
+            ],
+            "playlist": [
+                {
+                    "id": 727,
+                    "titol": "Boira al Llac",
+                    "autor": "Ambient Noir",
+                    "minuts": "04:20",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "thriller",
+                        "misteri"
+                    ]
+                }
+            ],
+            "stock": 6,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 128,
+            "titol": "Cuando ellos se van",
+            "autor": "Julia Navarro",
+            "idioma": "Castellà",
+            "tags": [
+                "no-ficció",
+                "pèrdua",
+                "dol"
+            ],
+            "playlist": [
+                {
+                    "id": 728,
+                    "titol": "Records",
+                    "autor": "Piano Solo",
+                    "minuts": "03:55",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "no-ficció",
+                        "drama"
+                    ]
+                }
+            ],
+            "stock": 3,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 129,
+            "titol": "Cocina para todos",
+            "autor": "Karlos Arguiñano",
+            "idioma": "Castellà",
+            "tags": [
+                "cuina",
+                "receptes",
+                "no-ficció"
+            ],
+            "playlist": [
+                {
+                    "id": 729,
+                    "titol": "El Xup-Xup",
+                    "autor": "Salsa Llatina",
+                    "minuts": "02:50",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "cuina",
+                        "humor"
+                    ]
+                }
+            ],
+            "stock": 10,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 130,
+            "titol": "Las fuerzas que mueven el mundo",
+            "autor": "El Orden Mundial",
+            "idioma": "Castellà",
+            "tags": [
+                "geopolítica",
+                "actualitat",
+                "assaig"
+            ],
+            "playlist": [
+                {
+                    "id": 730,
+                    "titol": "Mapa",
+                    "autor": "World News Theme",
+                    "minuts": "03:30",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "geopolítica",
+                        "assaig"
+                    ]
+                }
+            ],
+            "stock": 5,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 131,
+            "titol": "Esto no existe",
+            "autor": "Juan Soto Ivars",
+            "idioma": "Castellà",
+            "tags": [
+                "assaig",
+                "actualitat"
+            ],
+            "playlist": [
+                {
+                    "id": 731,
+                    "titol": "Opinió",
+                    "autor": "Hip Hop",
+                    "minuts": "04:05",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "assaig",
+                        "actualitat"
+                    ]
+                }
+            ],
+            "stock": 4,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 132,
+            "titol": "Morante, punto y aparte",
+            "autor": "Rubén Amón",
+            "idioma": "Castellà",
+            "tags": [
+                "biografia",
+                "taurins"
+            ],
+            "playlist": [
+                {
+                    "id": 732,
+                    "titol": "Passeig",
+                    "autor": "Pasodoble",
+                    "minuts": "03:00",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "biografia",
+                        "tradició"
+                    ]
+                }
+            ],
+            "stock": 2,
+            "urlImatge": null,
+            "valoracions": []
+        },
+        {
+            "id": 133,
+            "titol": "El Problema de los Tres Cuerpos",
+            "autor": "Cixin Liu",
+            "idioma": "Castellà",
+            "tags": [
+                "ciència-ficció",
+                "epic",
+                "misteri"
+            ],
+            "playlist": [
+                {
+                    "id": 733,
+                    "titol": "Univers",
+                    "autor": "Space Ambient",
+                    "minuts": "06:10",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "ciència-ficció",
+                        "misteri"
+                    ]
+                }
+            ],
+            "stock": 5,
+            "urlImatge": null,
+            "valoracions": [
+                {
+                    "id": 315,
+                    "usuari": {
+                        "id": 101,
+                        "nom": "Anna Soler"
+                    },
+                    "puntuacio": 4.9,
+                    "review": "Ciència-ficció dura i molt intel·ligent."
+                }
+            ]
+        },
+        {
+            "id": 134,
+            "titol": "El Guardián Invisible",
+            "autor": "Dolores Redondo",
+            "idioma": "Castellà",
+            "tags": [
+                "thriller",
+                "misteri",
+                "basat en fets reals"
+            ],
+            "playlist": [
+                {
+                    "id": 734,
+                    "titol": "Boscos de Navarra",
+                    "autor": "Folk Nord",
+                    "minuts": "04:00",
+                    "lletra": null,
+                    "urlImatge": null,
+                    "tags": [
+                        "thriller",
+                        "misteri"
+                    ]
+                }
+            ],
+            "stock": 7,
+            "urlImatge": null,
+            "valoracions": []
+        }
+    ],
+    "reserves": [
+        {
+            "id": 501,
+            "llibre": {
+                "id": 105,
+                "titol": "El susurro del fuego"
+            },
+            "data_reserva": "2025-11-20T10:00:00.000Z",
+            "data_venciment": "2025-11-27T10:00:00.000Z"
+        },
+        {
+            "id": 502,
+            "llibre": {
+                "id": 114,
+                "titol": "La muy catastrófica visita al zoo"
+            },
+            "data_reserva": "2025-11-21T15:30:00.000Z",
+            "data_venciment": "2025-11-28T15:30:00.000Z"
+        },
+        {
+            "id": 503,
+            "llibre": {
+                "id": 111,
+                "titol": "Alas de ónix (Empíreo 3)"
+            },
+            "data_reserva": "2025-11-22T08:00:00.000Z",
+            "data_venciment": "2025-11-29T08:00:00.000Z"
+        },
+        {
+            "id": 504,
+            "llibre": {
+                "id": 102,
+                "titol": "El Filatelista"
+            },
+            "data_reserva": "2025-11-23T11:00:00.000Z",
+            "data_venciment": "2025-11-30T11:00:00.000Z"
+        }
+    ],
+    "llistes_personalitzades": [
+        {
+            "id": 601,
+            "nom": "Lectura d'Hivern (Anna i Marc)",
+            "llibres": [
+                {
+                    "id": 101,
+                    "titol": "Recupera tu mente, reconquista tu vida"
+                },
+                {
+                    "id": 105,
+                    "titol": "El susurro del fuego"
+                },
+                {
+                    "id": 117,
+                    "titol": "El círculo de los días"
+                }
+            ],
+            "usuaris": [
+                {
+                    "id": 101,
+                    "nom": "Anna Soler"
+                },
+                {
+                    "id": 102,
+                    "nom": "Marc Vidal"
+                }
+            ]
+        },
+        {
+            "id": 602,
+            "nom": "Grans Sagues Històriques (Marc)",
+            "llibres": [
+                {
+                    "id": 121,
+                    "titol": "Los tres mundos (Serie Julio César 3)"
+                },
+                {
+                    "id": 123,
+                    "titol": "Victoria"
+                },
+                {
+                    "id": 108,
+                    "titol": "El niño que perdió la guerra"
+                }
+            ],
+            "usuaris": [
+                {
+                    "id": 102,
+                    "nom": "Marc Vidal"
+                }
+            ]
+        },
+        {
+            "id": 603,
+            "nom": "Thriller Recomanat (Júlia)",
+            "llibres": [
+                {
+                    "id": 102,
+                    "titol": "El Filatelista"
+                },
+                {
+                    "id": 103,
+                    "titol": "El recluso"
+                },
+                {
+                    "id": 127,
+                    "titol": "La chica del lago"
+                },
+                {
+                    "id": 134,
+                    "titol": "El Guardián Invisible"
+                }
+            ],
+            "usuaris": [
+                {
+                    "id": 103,
+                    "nom": "Júlia Casals"
+                }
+            ]
+        }
+    ]
+}

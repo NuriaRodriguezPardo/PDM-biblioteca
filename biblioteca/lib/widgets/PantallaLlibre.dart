@@ -213,10 +213,16 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
                     children: llibre.playlist
                         .map(
                           (canco) => ListTile(
-                            leading: const Icon(Icons.music_note),
+                            leading: canco.urlImatge != null
+                                ? Image.network(
+                                    canco.urlImatge!,
+                                    width: 50,
+                                    height: 50,
+                                    fit: BoxFit.cover,
+                                  )
+                                : const Icon(Icons.music_note),
                             title: Text(canco.titol),
                             subtitle: Text(canco.autor),
-                            // Corregit: utilitzem duracioToString
                             trailing: Text(duracioToString(canco.minuts)),
                           ),
                         )
