@@ -9,7 +9,7 @@ import 'PantallaBusqueda.dart';
 import 'PantallaUsuari.dart';
 
 // Dades simulades per a PantallaMatch (Usuari Principal)
-final Usuari usuariActual = Usuari(id: 1, nom: "Usuari Principal");
+final Usuari usuariActual = Usuari(id: "1", nom: "Usuari Principal");
 
 // CORRECCIÓ: Utilitzem getAllLlibres() per carregar les dades del JSON de manera dinàmica i global
 final List<Llibre> listaLibros = getAllLlibres();

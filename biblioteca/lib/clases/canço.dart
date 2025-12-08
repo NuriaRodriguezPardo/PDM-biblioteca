@@ -1,10 +1,7 @@
-import 'dart:convert';
-import 'dart:io';
-
 class Canco {
   final String titol;
   final String autor;
-  final int id;
+  final String id;
   final Duration minuts;
   final String? lletra;
   final String? urlImatge;
@@ -16,7 +13,7 @@ class Canco {
     required this.autor,
     required this.id,
     required this.minuts,
-    required this.lletra,
+    this.lletra,
     this.urlImatge,
     DateTime? escoltada,
     required List<String> tags,

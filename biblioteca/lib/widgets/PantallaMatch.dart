@@ -246,7 +246,7 @@ Llibre _getLlibrePerCanco(Canco canco) {
 
   // 5. Caso de fallback (si la canción no está asociada a ningún libro)
   return Llibre(
-    id: -1,
+    id: "-1",
     titol: 'Llibre no trobat',
     autor: 'Desconegut',
     idioma: 'Desconegut',

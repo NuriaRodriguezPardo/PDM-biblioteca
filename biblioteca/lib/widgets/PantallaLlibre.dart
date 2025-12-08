@@ -156,7 +156,8 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
-                                            valoracio.usuari.nom,
+                                            ////////////////////////////////////////
+                                            valoracio.idUsuari,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,

@@ -5,9 +5,9 @@ import '../clases/valoracio.dart';
 import '../clases/usuari.dart';
 
 // Dades simulades per utilitzar en Valoracio
-final Usuari usuariSimulat = Usuari(id: 6, nom: "Maria F.");
+final Usuari usuariSimulat = Usuari(id: "6", nom: "Maria F.");
 final Llibre llibreSimulat = Llibre(
-  id: 0,
+  id: "1",
   titol: "1984",
   autor: "George Orwell",
   idioma: "Espanyol",
@@ -17,11 +17,11 @@ final Llibre llibreSimulat = Llibre(
 
 final List<Valoracio> valoracionsData = [
   Valoracio(
-    id: 0,
     puntuacio: 4.5,
     review:
         "Una trama excel·lent amb un ritme trepidant. El desenvolupament dels personatges és molt profund. Lectura totalment recomanada!",
-    usuari: usuariSimulat,
+    idUsuari: "2",
+    idLlibre: "1",
   ),
 ];
 

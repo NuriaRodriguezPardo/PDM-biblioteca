@@ -1,42 +1,38 @@
-import 'dart:convert';
-import 'dart:io';
-import 'usuari.dart';
-import 'llibre.dart';
-
 class Valoracio {
-  final int id;
   final double puntuacio;
   final String review;
-  final Usuari usuari; // Nou camp final
+  final String idUsuari;
+  final String idLlibre;
+  final DateTime data;
 
-  // CORRECCIÓ 1: S'elimina 'const'
   Valoracio({
-    required this.id,
     required this.puntuacio,
     required this.review,
-    required this.usuari,
+    required this.idUsuari,
+    required this.idLlibre,
   }) : assert(
          puntuacio >= 0.0 && puntuacio <= 5.0,
          'La puntuació ha d\'estar entre 0.0 i 5.0.',
-       );
+       ),
+       data =
+           DateTime.now(); // Inicialitzem data amb la data actual per defecte
 
-  // CORRECCIÓ 2: S'implementa Valoracio.fromJson utilitzant
-  // la llista d'inicialització per a tots els camps final.
   Valoracio.fromJson(Map<String, dynamic> json)
-    : id = json["id"] ?? -1,
-      puntuacio = json["puntuacio"]?.toDouble() ?? 0.0,
+    : puntuacio = json["puntuacio"]?.toDouble() ?? 0.0,
       review = json["review"] ?? '',
-      // Deserialització de l'objecte Usuari
-      usuari = Usuari.fromJson(json["usuari"] as Map<String, dynamic>? ?? {});
+      idUsuari = json["idUsuari"] ?? -1,
+      idLlibre = json["idLlibre"] ?? -1,
+      data = DateTime.tryParse(json["data"]) ?? DateTime.now();
 
   // Mètode toJson()
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       // Serialització de l'Usuari (Utilitzem toJson() que ja gestiona el cicle a usuari.dart)
-      'usuari': usuari.toJson(),
+      'usuari': idUsuari,
+      'llibre': idLlibre,
       'puntuacio': puntuacio,
       'review': review,
+      'data': data.toIso8601String(),
     };
   }
 }
