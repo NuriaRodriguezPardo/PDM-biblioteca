@@ -1,12 +1,8 @@
-// [PantallaUsuaris.dart]
 import 'package:flutter/material.dart';
 import '../clases/usuari.dart';
 import '../clases/llibre.dart';
-import '../clases/reserva.dart';
 import 'PantallaLlibre.dart';
-
-// Definició de les llistes de l'Usuari per simplificar l'accés
-// Nota: L'Usuari ja conté les seves pròpies llistes (pendents, llegits, reserves)
+import '../carregaDeDades.dart'; // Importat per accedir a les dades globals i loadAllDataMap
 
 class PantallaUsuari extends StatefulWidget {
   static String route = '/PantallaUsuaris';
@@ -20,13 +16,11 @@ class PantallaUsuari extends StatefulWidget {
 
 class _PantallaUsuariState extends State<PantallaUsuari>
     with SingleTickerProviderStateMixin {
-  // Inicialitzem TabController amb 2 pestanyes (Activitat i Recomanacions)
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    // 2 pestanyes: Activitat Recent i Recomanacions
     _tabController = TabController(length: 2, vsync: this);
   }
 
@@ -36,9 +30,25 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     super.dispose();
   }
 
+  /// Helper per obtenir un objecte Usuari a partir del seu ID (String).
+  Usuari _getUsuariById(String id) {
+    final allData = loadAllDataMap();
+    final usersList = allData['usuaris'] as List<dynamic>;
+
+    final userJson = usersList.firstWhere(
+      (u) => u['id'].toString() == id,
+      orElse: () => null,
+    );
+
+    if (userJson != null) {
+      return Usuari.fromJson(userJson);
+    } else {
+      return Usuari(id: id, nom: 'Usuari Desconegut');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // La pantalla d'usuari combina scroll vertical per al perfil amb una TabBarView per als llibres.
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.usuari.nom),
@@ -47,7 +57,6 @@ class _PantallaUsuariState extends State<PantallaUsuari>
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              // Navegar a configuració
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Configuració de l\'Usuari')),
               );
@@ -57,7 +66,6 @@ class _PantallaUsuariState extends State<PantallaUsuari>
       ),
       body: SingleChildScrollView(
         child: Column(
-          // CORRECCIÓ: Centrar tota la columna principal
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // 1. Informació Principal de l'Usuari
@@ -80,10 +88,8 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
-        // CORRECCIÓ: Centrar horitzontalment els elements de la columna
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Foto de perfil
           CircleAvatar(
             radius: 50,
             backgroundColor: Theme.of(context).colorScheme.secondary,
@@ -99,26 +105,20 @@ class _PantallaUsuariState extends State<PantallaUsuari>
             ),
           ),
           const SizedBox(height: 12),
-          // Nom d'usuari
           Text(
             widget.usuari.nom,
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            textAlign:
-                TextAlign.center, // Assegurem que el text estigui centrat
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
-          // ID d'usuari
           Text(
             'ID: ${widget.usuari.id}',
             style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            textAlign:
-                TextAlign.center, // Assegurem que el text estigui centrat
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          // Botó d'editar perfil
           OutlinedButton.icon(
             onPressed: () {
-              // Navegar a editar perfil
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Funció d\'editar perfil')),
               );
@@ -134,7 +134,6 @@ class _PantallaUsuariState extends State<PantallaUsuari>
   // Estadístiques: Seguidors, Amics, Llibres llegits
   Widget _buildEstadistiques(BuildContext context) {
     return Card(
-      // Centrar la targeta es fa mitjançant el CrossAxisAlignment.center a la columna principal
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
       child: Padding(
@@ -228,7 +227,6 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     }
 
     return Card(
-      // Centrar la targeta es fa mitjançant el CrossAxisAlignment.center a la columna principal
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
       child: Padding(
@@ -256,8 +254,10 @@ class _PantallaUsuariState extends State<PantallaUsuari>
               children: widget.usuari.tags.map((tag) {
                 return Chip(
                   label: Text(tag),
-                  backgroundColor: Theme.of(context).colorScheme.secondary
-                      .withOpacity(0.1), // Ús de color del tema
+                  // CORRECCIÓ: Substituït withOpacity(0.1) per withValues(alpha: 0.1)
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.secondary.withValues(alpha: 0.1),
                   labelStyle: TextStyle(
                     color: Theme.of(context).colorScheme.secondary,
                   ),
@@ -270,10 +270,9 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     );
   }
 
-  // Secció de llibres amb tabs (Ara Activitat i Recomanacions)
+  // Secció de llibres amb tabs
   Widget _buildSeccioLlibres(BuildContext context) {
     return Card(
-      // Centrar la targeta es fa mitjançant el CrossAxisAlignment.center a la columna principal
       margin: const EdgeInsets.all(16),
       elevation: 2,
       child: Column(
@@ -284,27 +283,17 @@ class _PantallaUsuariState extends State<PantallaUsuari>
             unselectedLabelColor: Colors.grey,
             indicatorColor: Theme.of(context).colorScheme.primary,
             tabs: const [
-              Tab(
-                text: 'Activitat',
-                icon: Icon(Icons.timeline),
-              ), // NOVA PESTANYA
-              Tab(
-                text: 'Recomanacions',
-                icon: Icon(Icons.star),
-              ), // NOVA PESTANYA
+              Tab(text: 'Activitat', icon: Icon(Icons.timeline)),
+              Tab(text: 'Recomanacions', icon: Icon(Icons.star)),
             ],
           ),
-          // Necessitem un SizedBox amb alçada fixa per contenir TabBarView dins del SingleChildScrollView
           SizedBox(
-            height: 400, // Altura suficient per veure el contingut de la llista
+            height: 400,
             child: TabBarView(
               controller: _tabController,
               children: [
-                // 1. Activitat Recent
                 ActivitatRecentTab(),
-
-                // 2. Recomanacions Personalitzades
-                RecomanacionsTab(),
+                RecomanacionsTab(tagsUsuari: widget.usuari.tags),
               ],
             ),
           ),
@@ -313,11 +302,11 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     );
   }
 
-  // Modal per mostrar llista de seguidors/seguint (necessari per _buildEstadistiques)
+  // Modal per mostrar llista de seguidors/seguint
   void _mostrarLlistaUsuaris(
     BuildContext context,
     String titol,
-    List<Usuari> usuaris,
+    List<String> idsUsuaris,
   ) {
     showModalBottomSheet(
       context: context,
@@ -334,7 +323,6 @@ class _PantallaUsuariState extends State<PantallaUsuari>
           builder: (context, scrollController) {
             return Column(
               children: [
-                // Handle i títol
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -359,9 +347,8 @@ class _PantallaUsuariState extends State<PantallaUsuari>
                   ),
                 ),
                 const Divider(height: 1),
-                // Llista d'usuaris
                 Expanded(
-                  child: usuaris.isEmpty
+                  child: idsUsuaris.isEmpty
                       ? Center(
                           child: Text(
                             'No hi ha $titol',
@@ -373,9 +360,11 @@ class _PantallaUsuariState extends State<PantallaUsuari>
                         )
                       : ListView.builder(
                           controller: scrollController,
-                          itemCount: usuaris.length,
+                          itemCount: idsUsuaris.length,
                           itemBuilder: (context, index) {
-                            final usuari = usuaris[index];
+                            final id = idsUsuaris[index];
+                            final usuari = _getUsuariById(id);
+
                             return ListTile(
                               leading: CircleAvatar(
                                 backgroundColor: Theme.of(
@@ -422,10 +411,12 @@ class _PantallaUsuariState extends State<PantallaUsuari>
 }
 
 // -----------------------------------------------------------
-// NOUS WIDGETS AUXILIARS (Substitueixen BookListTab i Reserves)
+// WIDGETS AUXILIARS
 // -----------------------------------------------------------
 
 class ActivitatRecentTab extends StatelessWidget {
+  const ActivitatRecentTab({super.key});
+
   @override
   Widget build(BuildContext context) {
     return const Center(
@@ -445,24 +436,69 @@ class ActivitatRecentTab extends StatelessWidget {
 }
 
 class RecomanacionsTab extends StatelessWidget {
+  final List<String> tagsUsuari;
+
+  const RecomanacionsTab({super.key, required this.tagsUsuari});
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.local_library,
-            size: 50,
-            color: Theme.of(context).colorScheme.primary,
+    final List<Llibre> recomanats = totsElsLlibres.where((llibre) {
+      return llibre.tags.any((tagLlibre) => tagsUsuari.contains(tagLlibre));
+    }).toList();
+
+    if (recomanats.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.local_library_outlined,
+              size: 50,
+              // CORRECCIÓ: Substituït withOpacity(0.5) per withValues(alpha: 0.5)
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'No tenim recomanacions pels teus interessos actuals.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.black54),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(8.0),
+      itemCount: recomanats.length,
+      itemBuilder: (context, index) {
+        final llibre = recomanats[index];
+        return Card(
+          child: ListTile(
+            leading: llibre.urlImatge != null
+                ? Image.network(
+                    llibre.urlImatge!,
+                    width: 40,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                  )
+                : const Icon(Icons.book),
+            title: Text(llibre.titol),
+            subtitle: Text(llibre.autor),
+            trailing: const Icon(Icons.arrow_forward),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PantallaLlibre(llibre: llibre),
+                ),
+              );
+            },
           ),
-          const SizedBox(height: 10),
-          const Text(
-            'Recomanacions basades en els teus tags.',
-            style: TextStyle(fontSize: 16, color: Colors.black54),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

@@ -12,25 +12,39 @@ class PantallaBusqueda extends StatefulWidget {
 
 class _PantallaBusquedaState extends State<PantallaBusqueda> {
   String query = '';
-  // Utilitzem la funció global per obtenir la llista completa de llibres
-  final List<Llibre> allLlibres = getAllLlibres();
+
+  // CORRECCIÓ: Usem la llista global exportada a carregaDeDades.dart en lloc de cridar la funció de nou.
+  // Això garanteix consistència (mateixa instància d'objectes).
+  final List<Llibre> allLlibres = totsElsLlibres;
 
   @override
   Widget build(BuildContext context) {
+    // Filtre de cerca
     final resultados = allLlibres.where((llibre) {
-      return llibre.titol.toLowerCase().contains(query.toLowerCase()) ||
-          llibre.autor.toLowerCase().contains(query.toLowerCase());
+      final tituloMatch = llibre.titol.toLowerCase().contains(
+        query.toLowerCase(),
+      );
+      final autorMatch = llibre.autor.toLowerCase().contains(
+        query.toLowerCase(),
+      );
+
+      // Opcional: També pots buscar per tags si vols
+      final tagMatch = llibre.tags.any(
+        (tag) => tag.toLowerCase().contains(query.toLowerCase()),
+      );
+
+      return tituloMatch || autorMatch || tagMatch;
     }).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Buscar libros')),
+      appBar: AppBar(title: const Text('Buscar llibres')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
               decoration: const InputDecoration(
-                hintText: 'Buscar por título o autor',
+                hintText: 'Buscar per títol, autor o etiqueta...',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
@@ -52,11 +66,23 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
                               ? Image.network(
                                   llibre.urlImatge!,
                                   width: 50,
+                                  height: 75, // Afegit height per proporció
                                   fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    // Si la imatge falla, mostrem icona
+                                    return const Icon(
+                                      Icons.broken_image,
+                                      size: 40,
+                                    );
+                                  },
                                 )
-                              : const Icon(Icons.book),
+                              : const Icon(Icons.book, size: 40),
                           title: Text(llibre.titol),
                           subtitle: Text(llibre.autor),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                          ),
                           onTap: () {
                             Navigator.push(
                               context,
@@ -68,7 +94,16 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
                         );
                       },
                     )
-                  : const Center(child: Text('No se encontraron resultados')),
+                  : const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search_off, size: 64, color: Colors.grey),
+                          SizedBox(height: 10),
+                          Text('No s\'han trobat resultats'),
+                        ],
+                      ),
+                    ),
             ),
           ],
         ),

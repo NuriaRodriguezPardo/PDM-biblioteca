@@ -11,6 +11,8 @@ final Llibre llibreSimulat = Llibre(
   titol: "1984",
   autor: "George Orwell",
   idioma: "Espanyol",
+  playlist: ["1", "2", "3"],
+  tags: ["Distopia", "Ciència-Ficció"],
   stock: 5,
   valoracions: [],
 );

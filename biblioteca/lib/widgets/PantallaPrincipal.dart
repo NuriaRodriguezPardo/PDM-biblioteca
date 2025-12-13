@@ -12,7 +12,7 @@ import 'PantallaUsuari.dart';
 final Usuari usuariActual = Usuari(id: "1", nom: "Usuari Principal");
 
 // CORRECCIÓ: Utilitzem getAllLlibres() per carregar les dades del JSON de manera dinàmica i global
-final List<Llibre> listaLibros = getAllLlibres();
+final List<Llibre> listaLibros = totsElsLlibres;
 
 class PantallaPrincipal extends StatelessWidget {
   const PantallaPrincipal({super.key});

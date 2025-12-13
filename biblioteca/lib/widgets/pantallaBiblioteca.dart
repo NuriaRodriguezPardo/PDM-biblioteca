@@ -3,12 +3,7 @@ import '../clases/llibre.dart';
 import '../clases/llista_personalitzada.dart';
 import '../clases/reserva.dart';
 import 'PantallaLlibre.dart';
-import '../clases/valoracio.dart';
-import '../clases/usuari.dart';
-import 'dart:convert';
-import '../clases/canço.dart';
 import '../carregaDeDades.dart';
-import 'PantallaUsuari.dart'; // Importat per si es vol navegar a Usuaris de la llista
 
 class BibliotecaScreen extends StatelessWidget {
   const BibliotecaScreen({Key? key}) : super(key: key);
@@ -40,16 +35,18 @@ class BibliotecaScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            // 1. Pendents (utilitza les dades carregades)
+            // 1. Pendents
+            // Assumim que 'llibresPendents' a carregaDeDades ja és una List<Llibre>.
+            // Si fos List<String>, caldria fer la conversió com a les llistes de sota.
             BookListTab(llibres: llibresPendents),
 
-            // 2. Reservats (Préstecs) (utilitza les dades carregades)
+            // 2. Reservats (Préstecs)
             Reserves(reserves: reserves),
 
-            // 3. Llegits (utilitza les dades carregades)
+            // 3. Llegits
             BookListTab(llibres: llibresLlegits),
 
-            // 4. Llistes Personalitzades (utilitza les dades carregades)
+            // 4. Llistes Personalitzades
             CustomLists(llistes: llistesPersonalitzades),
           ],
         ),
@@ -113,6 +110,11 @@ class Reserves extends StatelessWidget {
       itemCount: reserves.length,
       itemBuilder: (context, index) {
         final reserva = reserves[index];
+
+        // CORRECCIÓ: 'reserva.llibre' ara és un String (ID).
+        // Necessitem trobar l'objecte Llibre real per mostrar títol i passar-lo a la pantalla següent.
+        final Llibre llibreObjecte = _obtenirLlibrePerId(reserva.llibre);
+
         final bool isVencuda = reserva.dataVenciment.isBefore(DateTime.now());
         final String vencimentText = isVencuda
             ? 'VENCUDA: ${reserva.dataVenciment.day}/${reserva.dataVenciment.month}/${reserva.dataVenciment.year}'
@@ -123,13 +125,15 @@ class Reserves extends StatelessWidget {
             Icons.assignment,
             color: isVencuda ? Colors.red : Colors.green,
           ),
-          title: Text(reserva.llibre.titol),
+          // Ara usem llibreObjecte per obtenir el títol
+          title: Text(llibreObjecte.titol),
           subtitle: Text(vencimentText),
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => PantallaLlibre(llibre: reserva.llibre),
+                // Passem l'objecte Llibre recuperat
+                builder: (_) => PantallaLlibre(llibre: llibreObjecte),
               ),
             );
           },
@@ -156,18 +160,23 @@ class CustomLists extends StatelessWidget {
         return ExpansionTile(
           leading: const Icon(Icons.folder_shared_outlined),
           title: Text(llista.nom),
+          // 'numLlibres' funciona bé perquè és un getter sobre la longitud de la llista d'IDs
           subtitle: Text('${llista.numLlibres} llibres'),
-          children: llista.llibres.map((llibre) {
+          children: llista.llibres.map((idLlibre) {
+            // CORRECCIÓ: 'llista.llibres' és una List<String>.
+            // El 'map' ens dona un 'idLlibre' (String), hem de buscar l'objecte.
+            final Llibre llibreObjecte = _obtenirLlibrePerId(idLlibre);
+
             return ListTile(
               contentPadding: const EdgeInsets.only(left: 30, right: 16),
               leading: const Icon(Icons.book_outlined, size: 20),
-              title: Text(llibre.titol),
-              subtitle: Text(llibre.autor),
+              title: Text(llibreObjecte.titol),
+              subtitle: Text(llibreObjecte.autor),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => PantallaLlibre(llibre: llibre),
+                    builder: (_) => PantallaLlibre(llibre: llibreObjecte),
                   ),
                 );
               },
@@ -175,6 +184,38 @@ class CustomLists extends StatelessWidget {
           }).toList(),
         );
       },
+    );
+  }
+}
+
+// --- FUNCIONS HELPERS ---
+
+Llibre _obtenirLlibrePerId(String id) {
+  try {
+    // Usem la llista global 'totsElsLlibres' exportada des de carregaDeDades.dart
+    return totsElsLlibres.firstWhere(
+      (l) => l.id == id,
+      orElse: () => Llibre(
+        id: '-1',
+        titol: 'Llibre no trobat ($id)',
+        autor: '-',
+        idioma: '-',
+        playlist: [],
+        tags: [],
+        stock: 0,
+        valoracions: [],
+      ),
+    );
+  } catch (e) {
+    return Llibre(
+      id: '-1',
+      titol: 'Error',
+      autor: '-',
+      idioma: '-',
+      playlist: [],
+      tags: [],
+      stock: 0,
+      valoracions: [],
     );
   }
 }
