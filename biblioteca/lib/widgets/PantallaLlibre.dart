@@ -3,6 +3,7 @@ import '../clases/llibre.dart';
 import '../clases/canço.dart';
 import '../clases/valoracio.dart';
 import '../carregaDeDades.dart'; // Importat per accedir a les dades globals
+import '../clases/carregaDeHistorial.dart';
 
 class PantallaLlibre extends StatefulWidget {
   final Llibre llibre;
@@ -132,13 +133,42 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
             ElevatedButton(
               onPressed: (llibre.disponible() && !jaReservat)
                   ? () {
-                      setState(() {
-                        // TODO: Implementar lògica real de disminuir stock a carregaDeDades
+                      // 1. Intentem fer la reserva globalment (restar stock)
+                      bool exito = reservarLlibreGlobal(llibre.id);
+
+                      if (exito) {
+                        setState(() {
+                          // 2. Si ha funcionat, actualitzem l'estat local
+                          jaReservat = true;
+
+                          // 3. Feedback visual d'èxit
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Reserva confirmada: ${llibre.titol}',
+                              ),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+
+                          // 4. Registrem l'activitat a l'historial
+                          registrarActivitat(
+                            "Reserva realitzada",
+                            "Has reservat el llibre '${llibre.titol}'.",
+                            Icons.bookmark_added,
+                          );
+                        });
+                      } else {
+                        // 5. Gestió d'errors (si no hi ha stock real)
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Reservant ${llibre.titol}')),
+                          const SnackBar(
+                            content: Text('Error: No queda stock disponible.'),
+                            backgroundColor: Colors.red,
+                          ),
                         );
-                        jaReservat = true;
-                      });
+                        // Forcem un redibuixat per actualitzar el contador d'stock visual
+                        setState(() {});
+                      }
                     }
                   : null,
               child: Text(jaReservat ? 'Ja reservat' : 'Reservar'),

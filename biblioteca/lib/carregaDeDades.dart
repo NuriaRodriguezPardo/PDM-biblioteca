@@ -303,3 +303,19 @@ final List<Llibre> llibresLlegits = _data['llibresLlegits'];
 final List<Reserva> reserves = _data['reserves'];
 final List<LlistaPersonalitzada> llistesPersonalitzades =
     _data['llistesPersonalitzades'];
+
+bool reservarLlibreGlobal(String idLlibre) {
+  try {
+    // 1. Busquem el llibre "real" dins la llista global 'totsElsLlibres'
+    final llibre = totsElsLlibres.firstWhere((l) => l.id == idLlibre);
+
+    // 2. Intentem disminuir l'stock usant el mètode de la classe Llibre
+    // (El mètode disminuirStock ja controla si stock > 0)
+    bool resultat = llibre.disminuirStock(1);
+
+    return resultat;
+  } catch (e) {
+    // Si no troba el llibre o passa algo raro
+    return false;
+  }
+}

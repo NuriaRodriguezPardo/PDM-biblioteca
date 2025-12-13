@@ -4,6 +4,7 @@ import '../clases/llibre.dart';
 import '../clases/usuari.dart';
 import '../clases/canço.dart';
 import '../carregaDeDades.dart'; // Importat per getAllCancons() i totsElsLlibres
+import '../clases/carregaDeHistorial.dart';
 
 class PantallaMatching extends StatefulWidget {
   static String route = '/PantallaMatching';
@@ -97,6 +98,14 @@ class _PantallaMatchingState extends State<PantallaMatching> {
       _cancoSeleccionada = canco;
       // Una vegada seleccionada la cançó, busquem el llibre associat
       _llibreAssignat = _getLlibrePerCanco(canco);
+
+      if (_llibreAssignat != null && _llibreAssignat!.id != "-1") {
+        registrarActivitat(
+          "Match Musical",
+          "Match entre '${canco.titol}' y '${_llibreAssignat!.titol}'.",
+          Icons.music_note,
+        );
+      }
     });
   }
 
