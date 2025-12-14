@@ -40,11 +40,46 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Opció 1: Crear nova llista
+              // Opció 1: Afegir a Pendents
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.orange,
+                  child: const Icon(Icons.bookmark_add, color: Colors.white),
+                ),
+                title: const Text('Afegir a Pendents'),
+                subtitle: const Text('Marca un llibre per llegir més tard'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _mostrarSeleccioLlibrePerAfegir(context, 'pendents');
+                },
+              ),
+              const Divider(),
+
+              // Opció 2: Marcar com Llegit
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.green,
+                  child: const Icon(Icons.check_circle, color: Colors.white),
+                ),
+                title: const Text('Marcar com a Llegit'),
+                subtitle: const Text(
+                  'Afegeix un llibre a la llista de llegits',
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _mostrarSeleccioLlibrePerAfegir(context, 'llegits');
+                },
+              ),
+              const Divider(),
+
+              // Opció 3: Crear nova llista
               ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: const Icon(Icons.add, color: Colors.white),
+                  child: const Icon(
+                    Icons.create_new_folder,
+                    color: Colors.white,
+                  ),
                 ),
                 title: const Text('Crear nova llista'),
                 subtitle: const Text('Crea una llista personalitzada nova'),
@@ -55,13 +90,13 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
               ),
               const Divider(),
 
-              // Opció 2: Afegir llibre a llista existent
+              // Opció 4: Afegir llibre a llista existent
               ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Theme.of(context).colorScheme.secondary,
                   child: const Icon(Icons.playlist_add, color: Colors.white),
                 ),
-                title: const Text('Afegir llibre a llista'),
+                title: const Text('Afegir a llista personalitzada'),
                 subtitle: const Text('Afegeix un llibre a una llista existent'),
                 onTap: () {
                   Navigator.pop(context);
@@ -71,6 +106,122 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
               const SizedBox(height: 20),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  // Seleccionar llibre per afegir a Pendents o Llegits
+  void _mostrarSeleccioLlibrePerAfegir(BuildContext context, String tipus) {
+    final String titol = tipus == 'pendents'
+        ? 'Afegir a Pendents'
+        : 'Marcar com a Llegit';
+    final IconData icona = tipus == 'pendents'
+        ? Icons.bookmark_add
+        : Icons.check_circle;
+    final Color color = tipus == 'pendents' ? Colors.orange : Colors.green;
+
+    // Filtrar llibres que ja estan a la llista corresponent
+    final List<Llibre> llibresDisponibles = totsElsLlibres.where((llibre) {
+      if (tipus == 'pendents') {
+        return !llibresPendents.any((l) => l.id == llibre.id);
+      } else {
+        return !llibresLlegits.any((l) => l.id == llibre.id);
+      }
+    }).toList();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(icona, color: color),
+              const SizedBox(width: 8),
+              Text(titol),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 400,
+            child: llibresDisponibles.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          size: 60,
+                          color: Colors.grey[300],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          tipus == 'pendents'
+                              ? 'Tots els llibres ja estan a pendents!'
+                              : 'Tots els llibres ja estan llegits!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: llibresDisponibles.length,
+                    itemBuilder: (context, index) {
+                      final llibre = llibresDisponibles[index];
+                      return ListTile(
+                        leading: llibre.urlImatge != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: Image.network(
+                                  llibre.urlImatge!,
+                                  width: 40,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      const Icon(Icons.book),
+                                ),
+                              )
+                            : const Icon(Icons.book),
+                        title: Text(
+                          llibre.titol,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(llibre.autor),
+                        onTap: () {
+                          setState(() {
+                            if (tipus == 'pendents') {
+                              llibresPendents.add(llibre);
+                            } else {
+                              llibresLlegits.add(llibre);
+                              // Treure de pendents si hi era
+                              llibresPendents.removeWhere(
+                                (l) => l.id == llibre.id,
+                              );
+                            }
+                          });
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                tipus == 'pendents'
+                                    ? '"${llibre.titol}" afegit a pendents'
+                                    : '"${llibre.titol}" marcat com a llegit',
+                              ),
+                              backgroundColor: color,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel·lar'),
+            ),
+          ],
         );
       },
     );
@@ -176,12 +327,11 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
                       return;
                     }
 
-                    // Crear la nova llista
                     final novaLlista = LlistaPersonalitzada(
                       id: DateTime.now().millisecondsSinceEpoch.toString(),
                       nom: nomController.text.trim(),
                       llibres: llibresSeleccionats.toList(),
-                      usuaris: ["1"], // Usuari principal
+                      usuaris: ["1"],
                     );
 
                     setState(() {
@@ -326,6 +476,46 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
     );
   }
 
+  // Eliminar llibre de pendents
+  void _eliminarDePendents(Llibre llibre) {
+    setState(() {
+      llibresPendents.removeWhere((l) => l.id == llibre.id);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('"${llibre.titol}" eliminat de pendents'),
+        action: SnackBarAction(
+          label: 'Desfer',
+          onPressed: () {
+            setState(() {
+              llibresPendents.add(llibre);
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  // Eliminar llibre de llegits
+  void _eliminarDeLlegits(Llibre llibre) {
+    setState(() {
+      llibresLlegits.removeWhere((l) => l.id == llibre.id);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('"${llibre.titol}" eliminat de llegits'),
+        action: SnackBarAction(
+          label: 'Desfer',
+          onPressed: () {
+            setState(() {
+              llibresLlegits.add(llibre);
+            });
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -346,12 +536,63 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
         ),
         body: TabBarView(
           children: [
-            BookListTab(llibres: llibresPendents),
-            Reserves(reserves: reserves),
-            BookListTab(llibres: llibresLlegits),
+            // Pendents amb opció d'eliminar
+            BookListTabWithActions(
+              llibres: llibresPendents,
+              onDelete: _eliminarDePendents,
+              onMarkAsRead: (llibre) {
+                setState(() {
+                  llibresPendents.removeWhere((l) => l.id == llibre.id);
+                  llibresLlegits.add(llibre);
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('"${llibre.titol}" marcat com a llegit'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              emptyMessage: 'No tens llibres pendents.\nPrem + per afegir-ne!',
+              emptyIcon: Icons.bookmark_border,
+            ),
+
+            // Reservats
+            ReservesTab(
+              reserves: reserves,
+              onCancelReserva: (reserva) {
+                setState(() {
+                  reserves.removeWhere((r) => r.id == reserva.id);
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Reserva cancel·lada'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              },
+            ),
+
+            // Llegits amb opció d'eliminar
+            BookListTabWithActions(
+              llibres: llibresLlegits,
+              onDelete: _eliminarDeLlegits,
+              emptyMessage:
+                  'No has llegit cap llibre encara.\nPrem + per marcar-ne un!',
+              emptyIcon: Icons.check_circle_outline,
+            ),
+
+            // Llistes personalitzades
             CustomLists(
               llistes: llistesPersonalitzades,
               onLlistaModificada: () => setState(() {}),
+              onEliminarLlista: (llista) {
+                setState(() {
+                  llistesPersonalitzades.removeWhere((l) => l.id == llista.id);
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Llista "${llista.nom}" eliminada')),
+                );
+              },
             ),
           ],
         ),
@@ -365,48 +606,157 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
   }
 }
 
-// --- WIDGETS AUXILIARS ---
+// --- WIDGETS AUXILIARS MILLORATS ---
 
-class BookListTab extends StatelessWidget {
+// Widget per mostrar llistes de Llibres amb accions
+class BookListTabWithActions extends StatelessWidget {
   final List<Llibre> llibres;
-  const BookListTab({Key? key, required this.llibres}) : super(key: key);
+  final Function(Llibre) onDelete;
+  final Function(Llibre)? onMarkAsRead;
+  final String emptyMessage;
+  final IconData emptyIcon;
+
+  const BookListTabWithActions({
+    Key? key,
+    required this.llibres,
+    required this.onDelete,
+    this.onMarkAsRead,
+    required this.emptyMessage,
+    required this.emptyIcon,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     if (llibres.isEmpty) {
-      return const Center(child: Text('No hi ha llibres en aquesta llista.'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(emptyIcon, size: 60, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              emptyMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            ),
+          ],
+        ),
+      );
     }
+
     return ListView.builder(
       itemCount: llibres.length,
       itemBuilder: (context, index) {
         final llibre = llibres[index];
-        return ListTile(
-          leading: llibre.urlImatge != null
-              ? Image.network(llibre.urlImatge!, width: 50, fit: BoxFit.cover)
-              : const Icon(Icons.book, size: 40),
-          title: Text(llibre.titol),
-          subtitle: Text(llibre.autor),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => PantallaLlibre(llibre: llibre)),
-            );
+        return Dismissible(
+          key: Key(llibre.id),
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 20),
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          secondaryBackground: onMarkAsRead != null
+              ? Container(
+                  color: Colors.green,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  child: const Icon(Icons.check, color: Colors.white),
+                )
+              : Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+          confirmDismiss: (direction) async {
+            if (direction == DismissDirection.startToEnd) {
+              onDelete(llibre);
+              return false;
+            } else if (onMarkAsRead != null) {
+              onMarkAsRead!(llibre);
+              return false;
+            } else {
+              onDelete(llibre);
+              return false;
+            }
           },
+          child: ListTile(
+            leading: llibre.urlImatge != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Image.network(
+                      llibre.urlImatge!,
+                      width: 50,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.book, size: 40),
+                    ),
+                  )
+                : const Icon(Icons.book, size: 40),
+            title: Text(llibre.titol),
+            subtitle: Text(llibre.autor),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (onMarkAsRead != null)
+                  IconButton(
+                    icon: const Icon(Icons.check_circle_outline),
+                    tooltip: 'Marcar com llegit',
+                    onPressed: () => onMarkAsRead!(llibre),
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  tooltip: 'Eliminar',
+                  onPressed: () => onDelete(llibre),
+                ),
+              ],
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PantallaLlibre(llibre: llibre),
+                ),
+              );
+            },
+          ),
         );
       },
     );
   }
 }
 
-class Reserves extends StatelessWidget {
+// Widget per mostrar la llista de Reserves amb cancel·lació
+class ReservesTab extends StatelessWidget {
   final List<Reserva> reserves;
-  const Reserves({Key? key, required this.reserves}) : super(key: key);
+  final Function(Reserva) onCancelReserva;
+
+  const ReservesTab({
+    Key? key,
+    required this.reserves,
+    required this.onCancelReserva,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     if (reserves.isEmpty) {
-      return const Center(child: Text('No tens cap préstec o reserva activa.'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.assignment_outlined, size: 60, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              'No tens cap reserva activa.\nVes a un llibre i prem "Reservar"!',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            ),
+          ],
+        ),
+      );
     }
+
     return ListView.builder(
       itemCount: reserves.length,
       itemBuilder: (context, index) {
@@ -417,69 +767,158 @@ class Reserves extends StatelessWidget {
             ? 'VENCUDA: ${reserva.dataVenciment.day}/${reserva.dataVenciment.month}/${reserva.dataVenciment.year}'
             : 'Venç: ${reserva.dataVenciment.day}/${reserva.dataVenciment.month}/${reserva.dataVenciment.year}';
 
-        return ListTile(
-          leading: Icon(
-            Icons.assignment,
-            color: isVencuda ? Colors.red : Colors.green,
-          ),
-          title: Text(llibreObjecte.titol),
-          subtitle: Text(vencimentText),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PantallaLlibre(llibre: llibreObjecte),
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: isVencuda
+                  ? Colors.red.shade100
+                  : Colors.green.shade100,
+              child: Icon(
+                Icons.assignment,
+                color: isVencuda ? Colors.red : Colors.green,
               ),
-            );
-          },
+            ),
+            title: Text(llibreObjecte.titol),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(vencimentText),
+                Text(
+                  'Reservat: ${reserva.dataReserva.day}/${reserva.dataReserva.month}/${reserva.dataReserva.year}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.cancel_outlined),
+              tooltip: 'Cancel·lar reserva',
+              onPressed: () => onCancelReserva(reserva),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PantallaLlibre(llibre: llibreObjecte),
+                ),
+              );
+            },
+          ),
         );
       },
     );
   }
 }
 
+// Widget per mostrar la llista de Llistes Personalitzades
 class CustomLists extends StatelessWidget {
   final List<LlistaPersonalitzada> llistes;
   final VoidCallback? onLlistaModificada;
+  final Function(LlistaPersonalitzada)? onEliminarLlista;
 
-  const CustomLists({Key? key, required this.llistes, this.onLlistaModificada})
-    : super(key: key);
+  const CustomLists({
+    Key? key,
+    required this.llistes,
+    this.onLlistaModificada,
+    this.onEliminarLlista,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     if (llistes.isEmpty) {
-      return const Center(child: Text('Encara no has creat cap llista.'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.folder_outlined, size: 60, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              'Encara no has creat cap llista.\nPrem + per crear-ne una!',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            ),
+          ],
+        ),
+      );
     }
+
     return ListView.builder(
       itemCount: llistes.length,
       itemBuilder: (context, index) {
         final llista = llistes[index];
-        return ExpansionTile(
-          leading: const Icon(Icons.folder_shared_outlined),
-          title: Text(llista.nom),
-          subtitle: Text('${llista.numLlibres} llibres'),
-          children: llista.llibres.map((idLlibre) {
-            final Llibre llibreObjecte = _obtenirLlibrePerId(idLlibre);
-            return ListTile(
-              contentPadding: const EdgeInsets.only(left: 30, right: 16),
-              leading: const Icon(Icons.book_outlined, size: 20),
-              title: Text(llibreObjecte.titol),
-              subtitle: Text(llibreObjecte.autor),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PantallaLlibre(llibre: llibreObjecte),
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: ExpansionTile(
+            leading: const Icon(Icons.folder_shared_outlined),
+            title: Text(llista.nom),
+            subtitle: Text('${llista.numLlibres} llibres'),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Eliminar llista?'),
+                    content: Text('Vols eliminar la llista "${llista.nom}"?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel·lar'),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          onEliminarLlista?.call(llista);
+                        },
+                        child: const Text('Eliminar'),
+                      ),
+                    ],
                   ),
                 );
               },
-            );
-          }).toList(),
+            ),
+            children: llista.llibres.isEmpty
+                ? [
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'Aquesta llista està buida',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                  ]
+                : llista.llibres.map((idLlibre) {
+                    final Llibre llibreObjecte = _obtenirLlibrePerId(idLlibre);
+                    return ListTile(
+                      contentPadding: const EdgeInsets.only(
+                        left: 30,
+                        right: 16,
+                      ),
+                      leading: const Icon(Icons.book_outlined, size: 20),
+                      title: Text(llibreObjecte.titol),
+                      subtitle: Text(llibreObjecte.autor),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                PantallaLlibre(llibre: llibreObjecte),
+                          ),
+                        );
+                      },
+                    );
+                  }).toList(),
+          ),
         );
       },
     );
   }
 }
+
+// --- FUNCIONS HELPERS ---
 
 Llibre _obtenirLlibrePerId(String id) {
   try {

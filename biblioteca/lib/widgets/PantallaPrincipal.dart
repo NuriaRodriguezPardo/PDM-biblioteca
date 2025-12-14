@@ -11,14 +11,11 @@ import 'PantallaUsuari.dart';
 // Dades simulades per a PantallaMatch (Usuari Principal)
 final Usuari usuariActual = Usuari(id: "1", nom: "Usuari Principal");
 
-// CORRECCIÓ: Utilitzem getAllLlibres() per carregar les dades del JSON de manera dinàmica i global
 final List<Llibre> listaLibros = totsElsLlibres;
 
 class PantallaPrincipal extends StatelessWidget {
   const PantallaPrincipal({super.key});
-
-  // CORRECCIÓ: La llista de llibres ara és global (listaLibros) i es pot accedir.
-  // Es pot fer pública si cal. La deixo com a final global per consistència.
+  static const String route = '/pantalla_principal';
 
   @override
   Widget build(BuildContext context) {

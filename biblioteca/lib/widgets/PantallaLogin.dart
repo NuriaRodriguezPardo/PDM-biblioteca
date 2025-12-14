@@ -1,9 +1,6 @@
-// [PantallaLogin.dart] - Colors i estils actualitzats
 import 'package:flutter/material.dart';
-
-import 'AppBiblio.dart'; // Importem per utilitzar els colors estàtics si cal
 import 'PantallaRegistrarse.dart';
-import 'PantallaPrincipal.dart'; 
+import 'PantallaPrincipal.dart';
 
 class PantallaLogin extends StatefulWidget {
   static const String route = '/login';
@@ -31,11 +28,16 @@ class _PantallaLoginState extends State<PantallaLogin> {
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
+      // Simulación de login
       await Future.delayed(const Duration(seconds: 2));
       setState(() => _isLoading = false);
-      
+
       if (mounted) {
-        Navigator.pushReplacementNamed(context, PantallaPrincipal.route);
+        // Navegación directa a la pantalla principal
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaPrincipal()),
+        );
       }
     }
   }
@@ -76,7 +78,8 @@ class _PantallaLoginState extends State<PantallaLogin> {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: colorScheme.secondary.withOpacity(0.8),
+            // CORREGIDO: withValues
+            color: colorScheme.secondary.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Icon(
@@ -99,7 +102,8 @@ class _PantallaLoginState extends State<PantallaLogin> {
           'Inicia sessió per continuar',
           style: TextStyle(
             fontSize: 16,
-            color: colorScheme.onSurface.withOpacity(0.6),
+            // CORREGIDO: withValues
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -120,7 +124,8 @@ class _PantallaLoginState extends State<PantallaLogin> {
               labelText: 'Correu electrònic',
               prefixIcon: Icon(
                 Icons.email_outlined,
-                color: colorScheme.secondary.withOpacity(0.8), // Blau-verd
+                // CORREGIDO: withValues
+                color: colorScheme.secondary.withValues(alpha: 0.8),
               ),
             ),
             validator: (value) {
@@ -131,7 +136,7 @@ class _PantallaLoginState extends State<PantallaLogin> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Contrasenya
           TextFormField(
             controller: _passwordController,
@@ -141,12 +146,16 @@ class _PantallaLoginState extends State<PantallaLogin> {
               hintText: '••••••••',
               prefixIcon: Icon(
                 Icons.lock_outline,
-                color: colorScheme.secondary.withOpacity(0.8), // Blau-verd
+                // CORREGIDO: withValues
+                color: colorScheme.secondary.withValues(alpha: 0.8),
               ),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: colorScheme.secondary.withOpacity(0.8), // Blau-verd
+                  _obscurePassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  // CORREGIDO: withValues
+                  color: colorScheme.secondary.withValues(alpha: 0.8),
                 ),
                 onPressed: () {
                   setState(() => _obscurePassword = !_obscurePassword);
@@ -182,10 +191,7 @@ class _PantallaLoginState extends State<PantallaLogin> {
               )
             : const Text(
                 'Iniciar sessió',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
       ),
     );
@@ -214,12 +220,19 @@ class _PantallaLoginState extends State<PantallaLogin> {
       children: [
         Text(
           'No tens compte? ',
-          style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6)),
+          // CORREGIDO: withValues
+          style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6)),
         ),
         GestureDetector(
           onTap: () {
-            // Navegació a la pantalla de Registre
-            Navigator.pushNamed(context, PantallaRegistrarse.route);
+            // CONEXIÓN CORREGIDA: Navegación directa a PantallaRegistrarse
+            // Esto asegura que funcione aunque no tengas las rutas nombradas en main.dart
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PantallaRegistrarse(),
+              ),
+            );
           },
           child: Text(
             'Registra\'t',

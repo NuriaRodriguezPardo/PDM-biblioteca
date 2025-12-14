@@ -1,7 +1,5 @@
-// [PantallaRegistrarse.dart] - Disseny actualitzat segons la imatge de "Crear compte"
+// [PantallaRegistrarse.dart] - Disseny actualitzat i corregit
 import 'package:flutter/material.dart';
-
-import 'AppBiblio.dart';
 
 class PantallaRegistrarse extends StatefulWidget {
   static const String route = '/registrarse';
@@ -19,17 +17,22 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _acceptTerms = false; // Nou camp
+  bool _acceptTerms = false;
   bool _isLoading = false;
 
   // Llista de gèneres disponibles per als tags
   final List<String> _availableGenres = [
-    'Fantasia', 'Ciència-ficció', 'Clàssics', 
-    'Thriller', 'Romanç', 'Històric', 
-    'Terror', 'Aventura',
+    'Fantasia',
+    'Ciència-ficció',
+    'Clàssics',
+    'Thriller',
+    'Romanç',
+    'Històric',
+    'Terror',
+    'Aventura',
   ];
   // Conjunt per emmagatzemar els gèneres seleccionats
-  final Set<String> _selectedGenres = {}; 
+  final Set<String> _selectedGenres = {};
 
   @override
   void dispose() {
@@ -43,31 +46,32 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
   Future<void> _register() async {
     if (_formKey.currentState!.validate() && _acceptTerms) {
       if (_selectedGenres.isEmpty) {
-        // Opcional: Mostrar advertència si no es selecciona cap gènere (malgrat que la imatge diu "opcional")
-        // No obstant, seguirem la indicació de la imatge i només validarem la resta.
+        // Opcional: lògica si no hi ha gèneres
       }
 
       setState(() => _isLoading = true);
-      
+
       // Simular delay de registre
       await Future.delayed(const Duration(seconds: 2));
-      
+
       setState(() => _isLoading = false);
-      
+
       // Torna a la pantalla de login un cop registrat
       if (mounted) {
-        Navigator.pop(context); 
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registre exitós! Ja pots iniciar sessió.')),
+          const SnackBar(
+            content: Text('Registre exitós! Ja pots iniciar sessió.'),
+          ),
         );
       }
     } else if (!_acceptTerms) {
-       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Has d\'acceptar els termes i condicions.'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Has d\'acceptar els termes i condicions.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -112,13 +116,15 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
           width: 60,
           height: 60,
           decoration: BoxDecoration(
-            color: colorScheme.secondary.withOpacity(0.1), // Blau-verd molt clar
+            // CORREGIDO: withValues
+            color: colorScheme.secondary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             Icons.person_add_alt_1_outlined,
             size: 35,
-            color: colorScheme.secondary.withOpacity(0.8),
+            // CORREGIDO: withValues
+            color: colorScheme.secondary.withValues(alpha: 0.8),
           ),
         ),
         const SizedBox(height: 20),
@@ -136,7 +142,8 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 16,
-            color: colorScheme.onSurface.withOpacity(0.6),
+            // CORREGIDO: withValues
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -155,7 +162,11 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
             decoration: InputDecoration(
               hintText: 'Nom complet',
               labelText: 'Nom complet',
-              prefixIcon: Icon(Icons.person_outline, color: colorScheme.secondary.withOpacity(0.8)),
+              // CORREGIDO: withValues
+              prefixIcon: Icon(
+                Icons.person_outline,
+                color: colorScheme.secondary.withValues(alpha: 0.8),
+              ),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -173,7 +184,11 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
             decoration: InputDecoration(
               hintText: 'Correu electrònic',
               labelText: 'Correu electrònic',
-              prefixIcon: Icon(Icons.email_outlined, color: colorScheme.secondary.withOpacity(0.8)),
+              // CORREGIDO: withValues
+              prefixIcon: Icon(
+                Icons.email_outlined,
+                color: colorScheme.secondary.withValues(alpha: 0.8),
+              ),
             ),
             validator: (value) {
               if (value == null || value.isEmpty || !value.contains('@')) {
@@ -183,7 +198,7 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
             },
           ),
           const SizedBox(height: 13),
-          
+
           // 3. Contrasenya
           TextFormField(
             controller: _passwordController,
@@ -191,11 +206,18 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
             decoration: InputDecoration(
               hintText: 'Contrasenya',
               labelText: 'Contrasenya',
-              prefixIcon: Icon(Icons.lock_outline, color: colorScheme.secondary.withOpacity(0.8)),
+              // CORREGIDO: withValues
+              prefixIcon: Icon(
+                Icons.lock_outline,
+                color: colorScheme.secondary.withValues(alpha: 0.8),
+              ),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: colorScheme.secondary.withOpacity(0.8),
+                  _obscurePassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  // CORREGIDO: withValues
+                  color: colorScheme.secondary.withValues(alpha: 0.8),
                 ),
                 onPressed: () {
                   setState(() => _obscurePassword = !_obscurePassword);
@@ -218,7 +240,11 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
             decoration: InputDecoration(
               hintText: 'Confirmar contrasenya',
               labelText: 'Confirmar contrasenya',
-              prefixIcon: Icon(Icons.lock_outline, color: colorScheme.secondary.withOpacity(0.8)),
+              // CORREGIDO: withValues
+              prefixIcon: Icon(
+                Icons.lock_outline,
+                color: colorScheme.secondary.withValues(alpha: 0.8),
+              ),
             ),
             validator: (value) {
               if (value != _passwordController.text) {
@@ -237,16 +263,21 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surface, // Fons clar
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade300),
+        // CORREGIDO: withValues
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.bookmark_outline, size: 20, color: colorScheme.primary), // Icona de marcador
+              Icon(
+                Icons.bookmark_outline,
+                size: 20,
+                color: colorScheme.primary,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Quins gèneres t\'interessen?',
@@ -263,38 +294,42 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
             'Selecciona almenys 1 gènere (opcional)',
             style: TextStyle(
               fontSize: 14,
-              color: colorScheme.onSurface.withOpacity(0.6),
+              // CORREGIDO: withValues
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
-          // [PantallaRegistrarse.dart] - Fragment de _buildGenreSelection() actualitzat
-
-  // ... (Abans del Wrap)
-
           const SizedBox(height: 12),
           Wrap(
-            spacing: 4.0, 
-            runSpacing: 4.0, 
+            spacing: 4.0,
+            runSpacing: 4.0,
             children: _availableGenres.map((genre) {
               final isSelected = _selectedGenres.contains(genre);
               return ChoiceChip(
                 label: Text(genre),
                 selected: isSelected,
-                // REDUIR EL FARCIMENT PER AJUNTAR ELS CHIPS HORITZONTALMENT
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0), 
-                selectedColor: colorScheme.primary.withOpacity(0.1),
-                backgroundColor: Colors.grey.shade100,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 4.0,
+                ),
+                // CORREGIDO: withValues
+                selectedColor: colorScheme.primary.withValues(alpha: 0.1),
+                backgroundColor: Colors.grey.withValues(alpha: 0.1),
                 side: BorderSide(
-                  color: isSelected ? colorScheme.primary : Colors.grey.shade300,
+                  color: isSelected
+                      ? colorScheme.primary
+                      : Colors.grey.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
                 labelStyle: TextStyle(
-                  // REDUIR LA MIDA DE LLETRA
-                  fontSize: 15, // Mida més petita
-                  color: isSelected ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.8),
+                  fontSize: 15,
+                  // CORREGIDO: withValues
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurface.withValues(alpha: 0.8),
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
-                avatar: isSelected 
-                    ? Icon(Icons.check, size: 16, color: colorScheme.primary) // Icona de verificació també més petita
+                avatar: isSelected
+                    ? Icon(Icons.check, size: 16, color: colorScheme.primary)
                     : null,
                 onSelected: (selected) {
                   setState(() {
@@ -312,7 +347,6 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
       ),
     );
   }
-
 
   // Secció d'Acceptació de Termes
   Widget _buildTermsAndConditions(ColorScheme colorScheme) {
@@ -336,7 +370,8 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
               text: TextSpan(
                 style: TextStyle(
                   fontSize: 13,
-                  color: colorScheme.onSurface.withOpacity(0.8),
+                  // CORREGIDO: withValues
+                  color: colorScheme.onSurface.withValues(alpha: 0.8),
                 ),
                 children: <TextSpan>[
                   const TextSpan(text: 'Accepto els '),
@@ -381,10 +416,7 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
               )
             : const Text(
                 'Crear compte',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
       ),
     );
