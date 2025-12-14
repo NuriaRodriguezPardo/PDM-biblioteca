@@ -5,13 +5,324 @@ import '../clases/reserva.dart';
 import 'PantallaLlibre.dart';
 import '../carregaDeDades.dart';
 
-class BibliotecaScreen extends StatelessWidget {
+class BibliotecaScreen extends StatefulWidget {
   const BibliotecaScreen({Key? key}) : super(key: key);
 
-  void _crearNovaLlista(BuildContext context) {
-    // Implementar la lògica de creació de llista (e.g., obrir un diàleg)
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Nova llista personalitzada creada!')),
+  @override
+  State<BibliotecaScreen> createState() => _BibliotecaScreenState();
+}
+
+class _BibliotecaScreenState extends State<BibliotecaScreen> {
+  void _mostrarOpcionsAfegir(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Què vols fer?',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+
+              // Opció 1: Crear nova llista
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  child: const Icon(Icons.add, color: Colors.white),
+                ),
+                title: const Text('Crear nova llista'),
+                subtitle: const Text('Crea una llista personalitzada nova'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _mostrarDialegNovaLlista(context);
+                },
+              ),
+              const Divider(),
+
+              // Opció 2: Afegir llibre a llista existent
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  child: const Icon(Icons.playlist_add, color: Colors.white),
+                ),
+                title: const Text('Afegir llibre a llista'),
+                subtitle: const Text('Afegeix un llibre a una llista existent'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _mostrarSeleccioLlibre(context);
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _mostrarDialegNovaLlista(BuildContext context) {
+    final TextEditingController nomController = TextEditingController();
+    final Set<String> llibresSeleccionats = {};
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Crear nova llista'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nomController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nom de la llista',
+                        hintText: 'Ex: Lectures d\'estiu',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.folder),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Selecciona llibres (opcional):',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 200,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: totsElsLlibres.length,
+                        itemBuilder: (context, index) {
+                          final llibre = totsElsLlibres[index];
+                          final isSelected = llibresSeleccionats.contains(
+                            llibre.id,
+                          );
+
+                          return CheckboxListTile(
+                            value: isSelected,
+                            title: Text(
+                              llibre.titol,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(llibre.autor),
+                            secondary: llibre.urlImatge != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Image.network(
+                                      llibre.urlImatge!,
+                                      width: 40,
+                                      height: 50,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          const Icon(Icons.book),
+                                    ),
+                                  )
+                                : const Icon(Icons.book),
+                            onChanged: (value) {
+                              setDialogState(() {
+                                if (value == true) {
+                                  llibresSeleccionats.add(llibre.id);
+                                } else {
+                                  llibresSeleccionats.remove(llibre.id);
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel·lar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (nomController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'El nom de la llista no pot estar buit',
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Crear la nova llista
+                    final novaLlista = LlistaPersonalitzada(
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      nom: nomController.text.trim(),
+                      llibres: llibresSeleccionats.toList(),
+                      usuaris: ["1"], // Usuari principal
+                    );
+
+                    setState(() {
+                      llistesPersonalitzades.add(novaLlista);
+                    });
+
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Llista "${novaLlista.nom}" creada amb ${llibresSeleccionats.length} llibres',
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
+                  child: const Text('Crear'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _mostrarSeleccioLlibre(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Selecciona un llibre'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300,
+            child: ListView.builder(
+              itemCount: totsElsLlibres.length,
+              itemBuilder: (context, index) {
+                final llibre = totsElsLlibres[index];
+                return ListTile(
+                  leading: llibre.urlImatge != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: Image.network(
+                            llibre.urlImatge!,
+                            width: 40,
+                            height: 50,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.book),
+                          ),
+                        )
+                      : const Icon(Icons.book),
+                  title: Text(llibre.titol, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(llibre.autor),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _mostrarSeleccioLlista(context, llibre);
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel·lar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _mostrarSeleccioLlista(BuildContext context, Llibre llibre) {
+    if (llistesPersonalitzades.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No tens cap llista. Crea\'n una primer!'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Afegir "${llibre.titol}" a:'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: llistesPersonalitzades.length,
+              itemBuilder: (context, index) {
+                final llista = llistesPersonalitzades[index];
+                final jaConte = llista.llibres.contains(llibre.id);
+
+                return ListTile(
+                  leading: Icon(
+                    Icons.folder,
+                    color: jaConte
+                        ? Colors.grey
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(llista.nom),
+                  subtitle: Text(
+                    jaConte
+                        ? 'Ja conté aquest llibre'
+                        : '${llista.numLlibres} llibres',
+                  ),
+                  enabled: !jaConte,
+                  onTap: jaConte
+                      ? null
+                      : () {
+                          setState(() {
+                            llista.llibres.add(llibre.id);
+                          });
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '"${llibre.titol}" afegit a "${llista.nom}"',
+                              ),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel·lar'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -35,26 +346,18 @@ class BibliotecaScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            // 1. Pendents
-            // Assumim que 'llibresPendents' a carregaDeDades ja és una List<Llibre>.
-            // Si fos List<String>, caldria fer la conversió com a les llistes de sota.
             BookListTab(llibres: llibresPendents),
-
-            // 2. Reservats (Préstecs)
             Reserves(reserves: reserves),
-
-            // 3. Llegits
             BookListTab(llibres: llibresLlegits),
-
-            // 4. Llistes Personalitzades
-            CustomLists(llistes: llistesPersonalitzades),
+            CustomLists(
+              llistes: llistesPersonalitzades,
+              onLlistaModificada: () => setState(() {}),
+            ),
           ],
         ),
-
-        // Icona '+' per crear llistes personalitzades
         floatingActionButton: FloatingActionButton(
-          onPressed: () => _crearNovaLlista(context),
-          tooltip: 'Crear nova llista',
+          onPressed: () => _mostrarOpcionsAfegir(context),
+          tooltip: 'Afegir',
           child: const Icon(Icons.add),
         ),
       ),
@@ -64,7 +367,6 @@ class BibliotecaScreen extends StatelessWidget {
 
 // --- WIDGETS AUXILIARS ---
 
-// Widget per mostrar llistes de Llibres (Pendents i Llegits)
 class BookListTab extends StatelessWidget {
   final List<Llibre> llibres;
   const BookListTab({Key? key, required this.llibres}) : super(key: key);
@@ -96,7 +398,6 @@ class BookListTab extends StatelessWidget {
   }
 }
 
-// Widget per mostrar la llista de Reserves
 class Reserves extends StatelessWidget {
   final List<Reserva> reserves;
   const Reserves({Key? key, required this.reserves}) : super(key: key);
@@ -110,11 +411,7 @@ class Reserves extends StatelessWidget {
       itemCount: reserves.length,
       itemBuilder: (context, index) {
         final reserva = reserves[index];
-
-        // CORRECCIÓ: 'reserva.llibre' ara és un String (ID).
-        // Necessitem trobar l'objecte Llibre real per mostrar títol i passar-lo a la pantalla següent.
         final Llibre llibreObjecte = _obtenirLlibrePerId(reserva.llibre);
-
         final bool isVencuda = reserva.dataVenciment.isBefore(DateTime.now());
         final String vencimentText = isVencuda
             ? 'VENCUDA: ${reserva.dataVenciment.day}/${reserva.dataVenciment.month}/${reserva.dataVenciment.year}'
@@ -125,14 +422,12 @@ class Reserves extends StatelessWidget {
             Icons.assignment,
             color: isVencuda ? Colors.red : Colors.green,
           ),
-          // Ara usem llibreObjecte per obtenir el títol
           title: Text(llibreObjecte.titol),
           subtitle: Text(vencimentText),
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                // Passem l'objecte Llibre recuperat
                 builder: (_) => PantallaLlibre(llibre: llibreObjecte),
               ),
             );
@@ -143,10 +438,12 @@ class Reserves extends StatelessWidget {
   }
 }
 
-// Widget per mostrar la llista de Llistes Personalitzades
 class CustomLists extends StatelessWidget {
   final List<LlistaPersonalitzada> llistes;
-  const CustomLists({Key? key, required this.llistes}) : super(key: key);
+  final VoidCallback? onLlistaModificada;
+
+  const CustomLists({Key? key, required this.llistes, this.onLlistaModificada})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -160,13 +457,9 @@ class CustomLists extends StatelessWidget {
         return ExpansionTile(
           leading: const Icon(Icons.folder_shared_outlined),
           title: Text(llista.nom),
-          // 'numLlibres' funciona bé perquè és un getter sobre la longitud de la llista d'IDs
           subtitle: Text('${llista.numLlibres} llibres'),
           children: llista.llibres.map((idLlibre) {
-            // CORRECCIÓ: 'llista.llibres' és una List<String>.
-            // El 'map' ens dona un 'idLlibre' (String), hem de buscar l'objecte.
             final Llibre llibreObjecte = _obtenirLlibrePerId(idLlibre);
-
             return ListTile(
               contentPadding: const EdgeInsets.only(left: 30, right: 16),
               leading: const Icon(Icons.book_outlined, size: 20),
@@ -188,11 +481,8 @@ class CustomLists extends StatelessWidget {
   }
 }
 
-// --- FUNCIONS HELPERS ---
-
 Llibre _obtenirLlibrePerId(String id) {
   try {
-    // Usem la llista global 'totsElsLlibres' exportada des de carregaDeDades.dart
     return totsElsLlibres.firstWhere(
       (l) => l.id == id,
       orElse: () => Llibre(
