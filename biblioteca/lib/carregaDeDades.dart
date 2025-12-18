@@ -99,7 +99,7 @@ const String _BASE_DATA_JSON = '''
       "titol": "El Codi Da Vinci",
       "autor": "Dan Brown",
       "idioma": "Anglès",
-      "playlist": ["4"],
+      "playlist": ["4", "1"],
       "stock": 1,
       "valoracions": ["4"],
       "urlImatge": "https://m.media-amazon.com/images/I/71PR0C4XNjL._AC_UF1000,1000_QL80_.jpg",

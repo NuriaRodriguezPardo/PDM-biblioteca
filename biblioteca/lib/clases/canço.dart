@@ -7,6 +7,7 @@ class Canco {
   final String? urlImatge;
   DateTime? _escoltada;
   final List<String> tags;
+  final String urlAudio;
 
   Canco({
     required this.titol,
@@ -17,6 +18,7 @@ class Canco {
     this.urlImatge,
     DateTime? escoltada,
     required List<String> tags,
+    required this.urlAudio,
   }) : _escoltada = escoltada,
        this.tags = tags;
 
@@ -30,7 +32,8 @@ class Canco {
       _escoltada = json["escoltada"] != null
           ? DateTime.tryParse(json["escoltada"])
           : null,
-      tags = List<String>.from(json["tags"] ?? []);
+      tags = List<String>.from(json["tags"] ?? []),
+      urlAudio = json["urlAudio"] ?? "";
 
   Map<String, dynamic> toJson() => {
     "titol": titol,
@@ -41,6 +44,7 @@ class Canco {
     "urlImatge": urlImatge,
     "escoltada": _escoltada?.toIso8601String(),
     "tags": tags,
+    "urlAudio": urlAudio,
   };
 
   DateTime? get escoltada => _escoltada;
@@ -63,6 +67,7 @@ class Canco {
     minuts: ${duracioToString(minuts)},
     lletra: $lletra,
     urlImatge: $urlImatge
+    urlAudio: $urlAudio
     ''';
 }
 
@@ -88,3 +93,11 @@ String duracioToString(Duration duration) {
   final segons = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
   return '$minuts:$segons';
 }
+/* DURATION DEL FIREBASE 
+// Ejemplo para Flutter:
+List<String> partes = cancion.minuts.split(':');
+Duration duracion = Duration(
+  minutes: int.parse(partes[0]), 
+  seconds: int.parse(partes[1])
+);
+*/

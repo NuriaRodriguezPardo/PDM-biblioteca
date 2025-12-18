@@ -5,6 +5,7 @@ import '../clases/valoracio.dart';
 import '../clases/reserva.dart';
 import '../carregaDeDades.dart';
 import '../clases/carregaDeHistorial.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class PantallaLlibre extends StatefulWidget {
   final Llibre llibre;
@@ -20,6 +21,9 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
   final List<Canco> totesLesCancons = getAllCancons();
 
   bool jaReservat = false;
+  final AudioPlayer _audioplayer = AudioPlayer();
+  String? _cancoActual = null;
+  bool isPlaying = false;
 
   @override
   void initState() {
@@ -473,6 +477,45 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
                       if (canco == null) return const SizedBox.shrink();
 
                       return ListTile(
+                        onTap: () {
+                          if (_cancoActual != null) {
+                            if (_cancoActual == idCanco) {
+                              if (isPlaying) {
+                                _audioplayer.pause();
+                                setState(() {
+                                  isPlaying = false;
+                                });
+                              } else {
+                                _audioplayer.resume();
+                                setState(() {
+                                  isPlaying = true;
+                                });
+                              }
+                              _audioplayer.pause();
+                            } else {
+                              _audioplayer.stop();
+                              _cancoActual = idCanco;
+                              _audioplayer.play(
+                                UrlSource(
+                                  "https://download.samplelib.com/mp3/sample-3s.mp3",
+                                ),
+                              );
+                              setState(() {
+                                isPlaying = true;
+                              });
+                            }
+                          } else {
+                            _audioplayer.play(
+                              UrlSource(
+                                "https://luan.xyz/files/audio/nasa_on_a_mission.mp3",
+                              ),
+                            );
+                            _cancoActual = idCanco;
+                            setState(() {
+                              isPlaying = true;
+                            });
+                          }
+                        },
                         leading: canco.urlImatge != null
                             ? Image.network(
                                 canco.urlImatge!,
@@ -596,5 +639,11 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    _audioplayer.dispose();
+    super.dispose();
   }
 }
