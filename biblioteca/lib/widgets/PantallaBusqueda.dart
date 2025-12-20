@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../clases/llibre.dart';
 import 'PantallaLlibre.dart';
-import '../carregaDeDades.dart'; // Importat per getAllLlibres
+import '../InternalLists.dart';
 
 class PantallaBusqueda extends StatefulWidget {
   const PantallaBusqueda({super.key});
@@ -15,12 +15,11 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
 
   // CORRECCIÓ: Usem la llista global exportada a carregaDeDades.dart en lloc de cridar la funció de nou.
   // Això garanteix consistència (mateixa instància d'objectes).
-  final List<Llibre> allLlibres = totsElsLlibres;
-
+  final List<Llibre> llibresPerMostrar = llistaLlibresGlobal;
   @override
   Widget build(BuildContext context) {
     // Filtre de cerca
-    final resultados = allLlibres.where((llibre) {
+    final resultados = llistaLlibresGlobal.where((llibre) {
       final tituloMatch = llibre.titol.toLowerCase().contains(
         query.toLowerCase(),
       );

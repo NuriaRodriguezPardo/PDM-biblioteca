@@ -3,8 +3,8 @@ import 'dart:math';
 import '../clases/llibre.dart';
 import '../clases/usuari.dart';
 import '../clases/canço.dart';
-import '../carregaDeDades.dart'; // Importat per getAllCancons() i totsElsLlibres
 import '../clases/carregaDeHistorial.dart';
+import '../InternalLists.dart';
 
 class PantallaMatching extends StatefulWidget {
   static String route = '/PantallaMatching';
@@ -31,9 +31,7 @@ class _PantallaMatchingState extends State<PantallaMatching> {
   @override
   void initState() {
     super.initState();
-    // 1. Obtenir totes les cançons (Des de carregaDeDades.dart)
-    _allCancons = getAllCancons();
-    // 2. Seleccionar les 10 cançons aleatòries i amb tags variats
+    _allCancons = llistaCanconsGlobal;
     _canconsMostrades = _seleccionarCanconsAleatories(_allCancons, 10);
   }
 
@@ -239,7 +237,7 @@ class _PantallaMatchingState extends State<PantallaMatching> {
 
 Llibre _getLlibrePerCanco(Canco canco) {
   // 1. Obtenir tots els llibres disponibles (Usant la variable global de carregaDeDades)
-  final List<Llibre> allLlibres = totsElsLlibres;
+  final List<Llibre> allLlibres = llistaLlibresGlobal;
 
   // 2. Iterar sobre tots els llibres
   for (final llibre in allLlibres) {

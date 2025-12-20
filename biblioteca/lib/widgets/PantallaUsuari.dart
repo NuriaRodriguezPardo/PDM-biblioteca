@@ -5,6 +5,7 @@ import 'PantallaLlibre.dart';
 import '../carregaDeDades.dart'; // Importat per accedir a les dades globals i loadAllDataMap
 import 'PantallaEditarPerfil.dart';
 import '../clases/carregaDeHistorial.dart';
+import '../internalLists.dart';
 
 class PantallaUsuari extends StatefulWidget {
   static String route = '/PantallaUsuaris';
@@ -503,7 +504,7 @@ class RecomanacionsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<Llibre> recomanats = totsElsLlibres.where((llibre) {
+    final List<Llibre> recomanats = llistaLlibresGlobal.where((llibre) {
       return llibre.tags.any((tagLlibre) => tagsUsuari.contains(tagLlibre));
     }).toList();
 

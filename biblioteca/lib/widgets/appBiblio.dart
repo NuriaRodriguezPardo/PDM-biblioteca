@@ -1,4 +1,5 @@
 import 'package:biblioteca/widgets/PantallaLogin.dart';
+import 'package:biblioteca/widgets/PantallaPrincipal.dart';
 import 'package:flutter/material.dart';
 
 class AppBiblio extends StatelessWidget {
@@ -46,7 +47,7 @@ class AppBiblio extends StatelessWidget {
         scaffoldBackgroundColor: backgroundCustom,
         useMaterial3: false,
       ),
-      home: const PantallaLogin(),
+      home: const PantallaPrincipal(),
     );
   }
 }

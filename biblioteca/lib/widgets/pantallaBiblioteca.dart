@@ -4,6 +4,7 @@ import '../clases/llista_personalitzada.dart';
 import '../clases/reserva.dart';
 import 'PantallaLlibre.dart';
 import '../carregaDeDades.dart';
+import '../InternalLists.dart';
 
 class BibliotecaScreen extends StatefulWidget {
   const BibliotecaScreen({Key? key}) : super(key: key);
@@ -13,6 +14,7 @@ class BibliotecaScreen extends StatefulWidget {
 }
 
 class _BibliotecaScreenState extends State<BibliotecaScreen> {
+  final List<Llibre> llibresPerMostrar = llistaLlibresGlobal;
   void _mostrarOpcionsAfegir(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -122,7 +124,7 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
     final Color color = tipus == 'pendents' ? Colors.orange : Colors.green;
 
     // Filtrar llibres que ja estan a la llista corresponent
-    final List<Llibre> llibresDisponibles = totsElsLlibres.where((llibre) {
+    final List<Llibre> llibresDisponibles = llibresPerMostrar.where((llibre) {
       if (tipus == 'pendents') {
         return !llibresPendents.any((l) => l.id == llibre.id);
       } else {
@@ -265,9 +267,9 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
                       height: 200,
                       child: ListView.builder(
                         shrinkWrap: true,
-                        itemCount: totsElsLlibres.length,
+                        itemCount: llibresPerMostrar.length,
                         itemBuilder: (context, index) {
-                          final llibre = totsElsLlibres[index];
+                          final llibre = llibresPerMostrar[index];
                           final isSelected = llibresSeleccionats.contains(
                             llibre.id,
                           );
@@ -368,9 +370,9 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
             width: double.maxFinite,
             height: 300,
             child: ListView.builder(
-              itemCount: totsElsLlibres.length,
+              itemCount: llibresPerMostrar.length,
               itemBuilder: (context, index) {
-                final llibre = totsElsLlibres[index];
+                final llibre = llibresPerMostrar[index];
                 return ListTile(
                   leading: llibre.urlImatge != null
                       ? ClipRRect(
@@ -922,7 +924,7 @@ class CustomLists extends StatelessWidget {
 
 Llibre _obtenirLlibrePerId(String id) {
   try {
-    return totsElsLlibres.firstWhere(
+    return llistaLlibresGlobal.firstWhere(
       (l) => l.id == id,
       orElse: () => Llibre(
         id: '-1',

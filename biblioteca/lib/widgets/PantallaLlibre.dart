@@ -6,6 +6,7 @@ import '../clases/reserva.dart';
 import '../carregaDeDades.dart';
 import '../clases/carregaDeHistorial.dart';
 import 'package:audioplayers/audioplayers.dart';
+import '../InternalLists.dart';
 
 class PantallaLlibre extends StatefulWidget {
   final Llibre llibre;
@@ -17,8 +18,8 @@ class PantallaLlibre extends StatefulWidget {
 }
 
 class _PantallaLlibreState extends State<PantallaLlibre> {
-  final List<Llibre> listaLibros = totsElsLlibres;
-  final List<Canco> totesLesCancons = getAllCancons();
+  final List<Llibre> llibresPerMostrar = llistaLlibresGlobal;
+  final List<Canco> canconsPerMostrar = llistaCanconsGlobal;
 
   bool jaReservat = false;
   final AudioPlayer _audioplayer = AudioPlayer();
@@ -51,14 +52,6 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
     }
 
     return stars;
-  }
-
-  Canco? _getCancoById(String id) {
-    try {
-      return totesLesCancons.firstWhere((c) => c.id == id);
-    } catch (e) {
-      return null;
-    }
   }
 
   Valoracio _getValoracioSimulada(String idRef) {
@@ -191,6 +184,10 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
     final llibre = widget.llibre;
     final estaAPendents = _estaAPendents();
     final estaALlegits = _estaALlegits();
+    final List<Llibre> recomenats = obtenerLibrosRecomendados(
+      llibre,
+      llistaLlibresGlobal,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -463,109 +460,213 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
                   ),
             const SizedBox(height: 30),
 
-            // PLAYLIST ASSOCIADA
+            // --- SECCIÓN DE PLAYLIST ---
             Text(
-              'Playlist associada al llibre (${llibre.playlist.length}):',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              'Playlist associada (${llibre.playlist.length})',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 15),
+
             llibre.playlist.isEmpty
-                ? const Text('No hi ha playlist associada.')
+                ? const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'No hi ha cançons disponibles per a aquest llibre.',
+                      ),
+                    ),
+                  )
                 : Column(
                     children: llibre.playlist.map((idCanco) {
-                      final Canco? canco = _getCancoById(idCanco);
+                      final Canco? canco = getCancoById(
+                        idCanco,
+                      ); // Buscamos en la lista global
                       if (canco == null) return const SizedBox.shrink();
 
-                      return ListTile(
-                        onTap: () {
-                          if (_cancoActual != null) {
-                            if (_cancoActual == idCanco) {
-                              if (isPlaying) {
-                                _audioplayer.pause();
-                                setState(() {
-                                  isPlaying = false;
-                                });
-                              } else {
-                                _audioplayer.resume();
-                                setState(() {
-                                  isPlaying = true;
-                                });
-                              }
-                              _audioplayer.pause();
-                            } else {
-                              _audioplayer.stop();
-                              _cancoActual = idCanco;
-                              _audioplayer.play(
-                                UrlSource(
-                                  "https://download.samplelib.com/mp3/sample-3s.mp3",
-                                ),
-                              );
-                              setState(() {
-                                isPlaying = true;
-                              });
-                            }
-                          } else {
-                            _audioplayer.play(
-                              UrlSource(
-                                "https://luan.xyz/files/audio/nasa_on_a_mission.mp3",
+                      // Comprobamos si esta es la canción que está sonando ahora
+                      bool isCurrentCanco = _cancoActual == canco.id;
+
+                      return Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          child: ListTile(
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child:
+                                  canco.urlImatge != null &&
+                                      canco.urlImatge!.isNotEmpty
+                                  ? Image.network(
+                                      canco.urlImatge!,
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        width: 60,
+                                        height: 60,
+                                        color: Colors.grey[200],
+                                        child: const Icon(Icons.music_note),
+                                      ),
+                                    )
+                                  : Container(
+                                      width: 60,
+                                      height: 60,
+                                      color: Colors.blue[50],
+                                      child: const Icon(
+                                        Icons.music_note,
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                            ),
+                            title: Text(
+                              canco.titol,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
                               ),
-                            );
-                            _cancoActual = idCanco;
-                            setState(() {
-                              isPlaying = true;
-                            });
-                          }
-                        },
-                        leading: canco.urlImatge != null
-                            ? Image.network(
-                                canco.urlImatge!,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
-                                    const Icon(Icons.music_note),
-                              )
-                            : const Icon(Icons.music_note),
-                        title: Text(canco.titol),
-                        subtitle: Text(canco.autor),
-                        trailing: Text(duracioToString(canco.minuts)),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${canco.autor} • ${duracioToString(canco.minuts)}",
+                                ),
+                                if (canco.lletra != null)
+                                  Text(
+                                    canco.lletra!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            trailing: IconButton(
+                              iconSize: 35,
+                              // El color cambia si está sonando
+                              color: (isCurrentCanco && isPlaying)
+                                  ? const Color.fromARGB(255, 73, 27, 12)
+                                  : const Color.fromARGB(255, 32, 53, 90),
+                              icon: Icon(
+                                (isCurrentCanco && isPlaying)
+                                    ? Icons.pause_circle_filled
+                                    : Icons.play_circle_filled,
+                              ),
+                              onPressed: () async {
+                                if (isCurrentCanco) {
+                                  if (isPlaying) {
+                                    await _audioplayer.pause();
+                                    setState(() => isPlaying = false);
+                                  } else {
+                                    await _audioplayer.resume();
+                                    setState(() => isPlaying = true);
+                                  }
+                                } else {
+                                  // Es una canción nueva
+                                  await _audioplayer.stop();
+                                  setState(() {
+                                    _cancoActual = canco.id;
+                                    isPlaying = true;
+                                  });
+                                  // USAMOS LA URL DE FIREBASE DE LA CANCIÓN
+                                  await _audioplayer.play(
+                                    UrlSource(canco.urlAudio),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                        ),
                       );
                     }).toList(),
                   ),
-            const SizedBox(height: 30),
 
-            // ALTRES LLIBRES
-            Text(
-              'Altres llibres disponibles:',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
             Column(
-              children: listaLibros
-                  .where((lib) => lib.id != llibre.id)
-                  .map(
-                    (lib) => ListTile(
-                      leading: const Icon(Icons.book),
-                      title: Text(lib.titol),
-                      subtitle: Text(lib.autor),
-                      trailing: Text("Stock: ${lib.stock}"),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PantallaLlibre(llibre: lib),
-                          ),
-                        );
-                      },
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ... (otros widgets) ...
+                const Text(
+                  'Llibres semblants:',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+
+                if (recomenats.isEmpty)
+                  const Text(
+                    'Aquest llibre es molt original... No coincideix cap tag!',
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey,
                     ),
                   )
-                  .toList(),
+                else
+                  Column(
+                    children: recomenats
+                        .map(
+                          (lib) => ListTile(
+                            leading: lib.urlImatge != null
+                                ? Image.network(
+                                    lib.urlImatge!,
+                                    width: 40,
+                                    fit: BoxFit.cover,
+                                  )
+                                : const Icon(Icons.book),
+                            title: Text(lib.titol),
+                            subtitle: Text(lib.autor),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PantallaLlibre(llibre: lib),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                        .toList(),
+                  ),
+              ],
             ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
     );
+  }
+
+  List<Llibre> obtenerLibrosRecomendados(
+    Llibre libroActual,
+    List<Llibre> todosLosLibros,
+  ) {
+    // 1. Filtrar para no incluir el libro actual
+    final otrosLibros = todosLosLibros
+        .where((l) => l.id != libroActual.id)
+        .toList();
+
+    final tagsActuales = libroActual.tags.toSet();
+
+    // 2. Buscamos primero libros con 2 o más coincidencias
+    final recomendadosNivel2 = otrosLibros.where((lib) {
+      final coincidencias = tagsActuales.intersection(lib.tags.toSet());
+      return coincidencias.length >= 2;
+    }).toList();
+
+    // 3. Si encontramos libros con nivel 2, los devolvemos y paramos aquí
+    if (recomendadosNivel2.isNotEmpty) {
+      return recomendadosNivel2;
+    }
+
+    // 4. Si no hubo de nivel 2, buscamos libros con exactamente 1 coincidencia
+    return otrosLibros.where((lib) {
+      final coincidencias = tagsActuales.intersection(lib.tags.toSet());
+      return coincidencias.length == 1;
+    }).toList();
   }
 
   // Mostrar selecció de llista personalitzada

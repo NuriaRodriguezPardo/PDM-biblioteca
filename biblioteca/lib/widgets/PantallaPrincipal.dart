@@ -2,25 +2,49 @@ import 'package:flutter/material.dart';
 import '../clases/llibre.dart';
 import '../clases/usuari.dart';
 import 'PantallaLlibre.dart';
-import '../carregaDeDades.dart';
 import 'PantallaMatch.dart';
-import 'pantallaBiblioteca.dart'; // Afegida importació per BibliotecaScreen
+import 'pantallaBiblioteca.dart';
 import 'PantallaBusqueda.dart';
 import 'PantallaUsuari.dart';
+import '../InternalLists.dart';
 
 // Dades simulades per a PantallaMatch (Usuari Principal)
 final Usuari usuariActual = Usuari(id: "1", nom: "Usuari Principal");
 
-final List<Llibre> listaLibros = totsElsLlibres;
-
-class PantallaPrincipal extends StatelessWidget {
+class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
   static const String route = '/pantalla_principal';
 
   @override
-  Widget build(BuildContext context) {
-    List<Llibre> llibresPerMostrar = listaLibros;
+  State<PantallaPrincipal> createState() => _PantallaPrincipalState();
+}
 
+class _PantallaPrincipalState extends State<PantallaPrincipal> {
+  late List<Llibre> novedades;
+  late List<Llibre> populares;
+
+  @override
+  void initState() {
+    super.initState();
+    _generarListasAleatorias();
+  }
+
+  void _generarListasAleatorias() {
+    // Creamos copias de la lista global para no desordenar la original
+    List<Llibre> copiaNovedades = List.from(llistaLlibresGlobal);
+    List<Llibre> copiaPopulares = List.from(llistaLlibresGlobal);
+
+    // Mezclamos las listas aleatoriamente
+    copiaNovedades.shuffle();
+    copiaPopulares.shuffle();
+
+    // Cogemos un máximo de 10 elementos (o menos si no hay suficientes)
+    novedades = copiaNovedades.take(10).toList();
+    populares = copiaPopulares.take(10).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Catàleg de Llibres'),
@@ -28,7 +52,6 @@ class PantallaPrincipal extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // CORRECCIÓ: Navegació real a PantallaBusqueda
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -40,7 +63,6 @@ class PantallaPrincipal extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              // CORRECCIÓ: Navegació a la pantalla d'usuari
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -51,7 +73,6 @@ class PantallaPrincipal extends StatelessWidget {
           ),
         ],
       ),
-      // NAVEGACIÓ: Drawer per accedir a Biblioteca i Matching
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -67,7 +88,7 @@ class PantallaPrincipal extends StatelessWidget {
               leading: const Icon(Icons.bookmark),
               title: const Text('La Meva Biblioteca'),
               onTap: () {
-                Navigator.pop(context); // Tanca el drawer
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -80,10 +101,9 @@ class PantallaPrincipal extends StatelessWidget {
               leading: const Icon(Icons.shuffle),
               title: const Text('Matching Llibre/Cançó'),
               onTap: () {
-                Navigator.pop(context); // Tanca el drawer
+                Navigator.pop(context);
                 Navigator.push(
                   context,
-                  // PantallaMatching requereix un Usuari
                   MaterialPageRoute(
                     builder: (context) =>
                         PantallaMatching(usuari: usuariActual),
@@ -94,7 +114,6 @@ class PantallaPrincipal extends StatelessWidget {
           ],
         ),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -102,16 +121,16 @@ class PantallaPrincipal extends StatelessWidget {
           children: [
             const Text(
               'Novedades',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             SizedBox(
-              height: 200,
+              height: 230,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: llibresPerMostrar.length,
+                itemCount: novedades.length,
                 itemBuilder: (context, index) {
-                  final llibre = llibresPerMostrar[index];
+                  final llibre = novedades[index];
                   return GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -122,24 +141,48 @@ class PantallaPrincipal extends StatelessWidget {
                       );
                     },
                     child: Container(
-                      width: 120,
-                      margin: const EdgeInsets.only(right: 10),
+                      width: 140,
+                      margin: const EdgeInsets.only(right: 15),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          llibre.urlImatge != null &&
-                                  llibre.urlImatge!.isNotEmpty
-                              ? Image.network(
-                                  llibre.urlImatge!,
-                                  height: 150,
-                                  fit: BoxFit.cover,
-                                )
-                              : const Icon(Icons.book, size: 100),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child:
+                                llibre.urlImatge != null &&
+                                    llibre.urlImatge!.isNotEmpty
+                                ? Image.network(
+                                    llibre.urlImatge!,
+                                    height: 180,
+                                    width: 140,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      height: 180,
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.book, size: 50),
+                                    ),
+                                  )
+                                : Container(
+                                    height: 180,
+                                    color: Colors.grey[300],
+                                    child: const Icon(Icons.book, size: 50),
+                                  ),
+                          ),
                           const SizedBox(height: 5),
                           Text(
                             llibre.titol,
-                            maxLines: 2,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            llibre.autor,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                       ),
@@ -148,33 +191,64 @@ class PantallaPrincipal extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             const Text(
               'Populares',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Column(
-              children: llibresPerMostrar.map((llibre) {
-                return ListTile(
-                  leading:
-                      llibre.urlImatge != null && llibre.urlImatge!.isNotEmpty
-                      ? Image.network(
-                          llibre.urlImatge!,
-                          width: 50,
-                          fit: BoxFit.cover,
-                        )
-                      : const Icon(Icons.book),
-                  title: Text(llibre.titol),
-                  subtitle: Text(llibre.autor),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PantallaLlibre(llibre: llibre),
-                      ),
-                    );
-                  },
+              children: populares.map((llibre) {
+                return Card(
+                  elevation:
+                      1, // Añadimos un poco de elevación para ver mejor el borde
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    // ESTA ES LA CLAVE: Añade espacio interno para que la imagen no toque el borde
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child:
+                          llibre.urlImatge != null &&
+                              llibre.urlImatge!.isNotEmpty
+                          ? Image.network(
+                              llibre.urlImatge!,
+                              //width:
+                              //    55, // Un poco más ancha para que se vea mejor
+                              // height: 90,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 55,
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.book),
+                              ),
+                            )
+                          : Container(
+                              width: 55,
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.book),
+                            ),
+                    ),
+                    title: Text(
+                      llibre.titol,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(llibre.autor),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PantallaLlibre(llibre: llibre),
+                        ),
+                      );
+                    },
+                  ),
                 );
               }).toList(),
             ),
