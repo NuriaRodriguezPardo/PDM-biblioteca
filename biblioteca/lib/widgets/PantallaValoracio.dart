@@ -1,36 +1,12 @@
-// [PantallaValoracio.dart]
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../clases/llibre.dart';
 import '../clases/valoracio.dart';
 import '../clases/usuari.dart';
 
-// Dades simulades per utilitzar en Valoracio
-final Usuari usuariSimulat = Usuari(id: "6", nom: "Maria F.");
-final Llibre llibreSimulat = Llibre(
-  id: "1",
-  titol: "1984",
-  autor: "George Orwell",
-  idioma: "Espanyol",
-  playlist: ["1", "2", "3"],
-  tags: ["Distopia", "Ciència-Ficció"],
-  stock: 5,
-  valoracions: [],
-);
-
-final List<Valoracio> valoracionsData = [
-  Valoracio(
-    puntuacio: 4.5,
-    review:
-        "Una trama excel·lent amb un ritme trepidant. El desenvolupament dels personatges és molt profund. Lectura totalment recomanada!",
-    idUsuari: "2",
-    idLlibre: "1",
-  ),
-];
-
 class ReviewCard extends StatelessWidget {
   static String route = '/PantallaValoracio';
   final Valoracio review;
-  // Hem d'afegir llibre i usuari ja que la classe Valoracio original no els té.
   final Llibre llibre;
   final Usuari usuari;
 
@@ -41,24 +17,20 @@ class ReviewCard extends StatelessWidget {
     required this.usuari,
   }) : super(key: key);
 
-  // Nou mètode privat per generar la llista de widgets d'estrella
+  // Mantenemos tu lógica original de dibujo de estrellas
   List<Widget> _buildEstrelles(double puntuacio) {
     final fullStars = puntuacio.floor();
-    // Corregit: Simplificació de la lògica de mitja estrella.
     final bool hasHalfStar = (puntuacio - fullStars) >= 0.5;
     final emptyStars = 5 - (fullStars + (hasHalfStar ? 1 : 0));
 
     final stars = <Widget>[];
 
-    // Estrelles completes
     for (int i = 0; i < fullStars; i++) {
       stars.add(const Icon(Icons.star, color: Colors.amber, size: 20));
     }
-    // Mitja estrella
     if (hasHalfStar) {
       stars.add(const Icon(Icons.star_half, color: Colors.amber, size: 20));
     }
-    // Estrelles buides
     for (int i = 0; i < emptyStars; i++) {
       stars.add(const Icon(Icons.star_border, color: Colors.grey, size: 20));
     }
@@ -78,13 +50,11 @@ class ReviewCard extends StatelessWidget {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // CORRECCIÓ: Descomentat llibre.titol i llibre.autor
                       Text(
                         llibre.titol,
                         style: TextStyle(
@@ -100,11 +70,9 @@ class ReviewCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // visualitzacio de la puntuacio
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    // crida al nou metode
                     Row(children: _buildEstrelles(review.puntuacio)),
                     Text(
                       review.puntuacio.toStringAsFixed(1),
@@ -119,7 +87,6 @@ class ReviewCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-
             Container(
               padding: const EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
@@ -135,14 +102,11 @@ class ReviewCard extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 15),
-
             Row(
               children: [
                 const Icon(Icons.person, size: 18, color: Colors.black54),
                 const SizedBox(width: 5),
-                // CORRECCIÓ: Descomentat usuari.nom i usuari.id
                 Text(
                   usuari.nom,
                   style: const TextStyle(
@@ -151,7 +115,7 @@ class ReviewCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  ' (ID: ${usuari.id})',
+                  ' (ID: ${usuari.id.substring(0, min(usuari.id.length, 5))})', // Mostramos ID corto si es de Firebase
                   style: TextStyle(fontSize: 13, color: Colors.grey[500]),
                 ),
               ],
@@ -166,52 +130,68 @@ class ReviewCard extends StatelessWidget {
 class ValoracionsApp extends StatelessWidget {
   const ValoracionsApp({Key? key}) : super(key: key);
 
-  // Paleta de colors personalitzada
-  static const Color primaryCustom = Color(0xFF8F7561); // 8F7561
-  static const Color secondaryCustom = Color(0xFF5DA0A7); // 5DA0A7
-  static const Color errorCustom = Color(0xFFA25353); // A25353
-  static const Color backgroundDark = Color(0xFF47594E); // 47594E
-
   @override
   Widget build(BuildContext context) {
-    // Definició del ColorScheme amb els colors personalitzats
-    final ColorScheme customColorScheme = ColorScheme.light(
-      primary: primaryCustom, // Color principal (AppBar, títols)
-      onPrimary: Colors.white, // Text sobre el color principal
-      secondary: secondaryCustom, // Color per Floating Action Buttons
-      onSecondary: Colors.white,
-      surface: Colors.white, // Color de les Cards
-      onSurface: Colors.black87,
-      error: errorCustom, // Color d'error
-    );
-
-    return MaterialApp(
-      title: 'Pantalla de Valoracions',
-      theme: ThemeData(
-        // aplicacio de la paleta personalitzada
-        colorScheme: customColorScheme,
-        fontFamily: 'Roboto',
-        useMaterial3: true,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Valoracions del Catàleg'),
+        centerTitle: true,
       ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Valoracions del Catàleg'),
-          centerTitle: true,
-        ),
-        body: ListView.builder(
-          padding: const EdgeInsets.all(10.0),
-          itemCount: valoracionsData.length,
-          itemBuilder: (context, index) {
-            final review = valoracionsData[index];
-            // CORRECCIÓ: Cal passar un llibre i un usuari a la ReviewCard
-            return ReviewCard(
-              review: review,
-              llibre: llibreSimulat,
-              usuari: usuariSimulat,
-            );
-          },
-        ),
+      body: StreamBuilder<QuerySnapshot>(
+        // Escuchamos la colección real de Firebase en tiempo real
+        stream: FirebaseFirestore.instance
+            .collection('valoracions')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('Encara no hi ha valoracions.'));
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(10.0),
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              var doc = snapshot.data!.docs[index];
+              var data = doc.data() as Map<String, dynamic>;
+
+              // Mapeo dinámico desde los documentos de Firestore
+              final review = Valoracio(
+                puntuacio: (data['puntuacio'] ?? 0).toDouble(),
+                review: data['review'] ?? '',
+                idUsuari: data['idUsuari'] ?? '',
+                idLlibre: data['idLlibre'] ?? '',
+              );
+
+              // Reconstruimos el objeto Llibre y Usuari con los datos del documento
+              // Es recomendable guardar nomUsuari y titolLlibre en la misma colección de valoraciones para no hacer múltiples peticiones
+              return ReviewCard(
+                review: review,
+                llibre: Llibre(
+                  id: review.idLlibre,
+                  titol: data['titolLlibre'] ?? 'Llibre',
+                  autor: data['autorLlibre'] ?? 'Autor',
+                  idioma: '-',
+                  playlist: [],
+                  tags: [],
+                  stock: 0,
+                  valoracions: [],
+                ),
+                usuari: Usuari(
+                  id: review.idUsuari,
+                  nom: data['nomUsuari'] ?? 'Usuari Anònim',
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
 }
+
+// Helper simple para el substring del ID
+int min(int a, int b) => a < b ? a : b;

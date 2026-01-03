@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../clases/usuari.dart';
 import '../clases/carregaDeHistorial.dart';
 
 class PantallaEditarPerfil extends StatefulWidget {
   final Usuari usuari;
-
   const PantallaEditarPerfil({super.key, required this.usuari});
 
   @override
@@ -12,45 +13,129 @@ class PantallaEditarPerfil extends StatefulWidget {
 }
 
 class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
-  // Controladors per als camps de text
   late TextEditingController _nomController;
-  late TextEditingController _emailController;
-  late TextEditingController _passwordController;
-  late TextEditingController _imatgeUrlController;
-  late TextEditingController _nouTagController;
+  late TextEditingController _imatgeUrlController; // Controlador para la URL
+  final List<String> _tagsDisponibles = [
+    'Acción',
+    'Ajedrez',
+    'Amigos',
+    'Amistad',
+    'Angustia',
+    'Arte',
+    'Atraco',
+    'Autoayuda',
+    'Aventura',
+    'Bailes',
+    'Biografía',
+    'Bully',
+    'Café',
+    'Campus',
+    'Catalán',
+    'Ciberseguridad',
+    'Ciencia Ficción',
+    'Cine',
+    'Clásico',
+    'Comedia',
+    'Contemporáneo',
+    'Crimen',
+    'Cuentos',
+    'Dark Romance',
+    'Deporte',
+    'Deportes',
+    'Desaparición',
+    'Distopía',
+    'Doctorado',
+    'Dolor',
+    'Doméstico',
+    'Dragones',
+    'Drama',
+    'Emotivo',
+    'Enemigos',
+    'Erótica',
+    'Familia',
+    'Fantasía',
+    'Final',
+    'Fútbol',
+    'Guerra',
+    'Histórica',
+    'Hockey',
+    'Humor',
+    'Instituto',
+    'Intriga',
+    'Inédito',
+    'Juvenil',
+    'Londres',
+    'Magia',
+    'Maldiciones',
+    'Matrimonio',
+    'Misterio',
+    'Moda',
+    'Monstruos',
+    'Navidad',
+    'New Adult',
+    'No Ficción',
+    'Novedad',
+    'Obsesión',
+    'Otoño',
+    'Pasión',
+    'Patinaje',
+    'Playa',
+    'Poder',
+    'Policiaca',
+    'Política',
+    'Psicología',
+    'Psicológico',
+    'Psiquiatría',
+    'Realeza',
+    'Realismo',
+    'Redención',
+    'Reencuentro',
+    'Roma',
+    'Romance',
+    'Romance Histórico',
+    'Rugby',
+    'Secretos',
+    'Secuela',
+    'Segunda Oportunidad',
+    'Sentimental',
+    'Slow-burn',
+    'Sociedad',
+    'Supervivencia',
+    'Suspense',
+    'Thriller',
+    'Tragedia',
+    'Traición',
+    'Trilogía',
+    'Universidad',
+    'Vampiros',
+    'Venganza',
+    'Época',
+  ];
 
-  // Llista local de tags per editar
-  List<String> _tagsActuals = [];
+  final List<String> _tagsSeleccionats = [];
+
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    // Inicialitzem els controladors amb les dades actuals
     _nomController = TextEditingController(text: widget.usuari.nom);
-
-    // Dades simulades (ja que la classe Usuari no té email/pass/foto)
-    _emailController = TextEditingController(text: "usuari@exemple.com");
-    _passwordController = TextEditingController(text: "12345678");
-    _imatgeUrlController = TextEditingController(text: "");
-    _nouTagController = TextEditingController();
-
-    // Copiem els tags actuals per poder modificar-los localment
-    _tagsActuals = List.from(widget.usuari.tags);
+    _imatgeUrlController = TextEditingController(
+      text: widget.usuari.fotoUrl ?? "",
+    );
+    // Inicializamos los tags seleccionados con los del usuario
+    _tagsSeleccionats.addAll(widget.usuari.tags);
   }
 
   @override
   void dispose() {
     _nomController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
     _imatgeUrlController.dispose();
-    _nouTagController.dispose();
+    //_nouTagController.dispose();
     super.dispose();
   }
 
-  // Funció per guardar els canvis
-  void _guardarCanvis() {
-    // 1. Validació bàsica
+  Future<void> _guardarCanvis() async {
     if (_nomController.text.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -58,245 +143,161 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
       return;
     }
 
-    // 2. Actualització de dades
-    // NOTA: Com que 'nom' és final a la classe Usuari, aquí no el podem canviar directament
-    // sobre l'objecte 'widget.usuari' sense crear una nova instància.
-    // Tanmateix, les llistes com 'tags' sí que les podem modificar si no són const.
+    setState(() => _isSaving = true);
 
-    setState(() {
-      widget.usuari.nom = _nomController.text;
-      widget.usuari.fotoUrl = _imatgeUrlController.text.isNotEmpty
-          ? _imatgeUrlController.text
-          : null;
-      //widget.usuari.tags.clear();
-      widget.usuari.tags.addAll(_tagsActuals);
-    });
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception("No s'ha trobat l'usuari");
 
-    // 3. Feedback i tornar enrere
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Perfil actualitzat correctament (Simulat)'),
-        backgroundColor: Colors.green,
-      ),
-    );
+      final List<String> tagsAGuardar = List<String>.from(_tagsSeleccionats);
 
-    registrarActivitat(
-      "Perfil Actualizado",
-      "Has modificado tus datos personales.",
-      Icons.person_outline,
-    );
+      // Guardamos en Firestore
+      await FirebaseFirestore.instance.collection('usuaris').doc(user.uid).set({
+        'nom': _nomController.text.trim(),
+        'fotoUrl': _imatgeUrlController.text
+            .trim(), // Guardamos la URL del campo de texto
+        'interessos': tagsAGuardar,
+      }, SetOptions(merge: true));
 
-    // Tornem a la pantalla anterior
-    Navigator.pop(context);
-  }
+      // Actualizamos también el perfil de Auth para consistencia
+      await user.updateDisplayName(_nomController.text.trim());
+      if (_imatgeUrlController.text.isNotEmpty) {
+        await user.updatePhotoURL(_imatgeUrlController.text.trim());
+      }
 
-  // Funció per afegir un tag
-  void _afegirTag() {
-    final text = _nouTagController.text.trim();
-    if (text.isNotEmpty && !_tagsActuals.contains(text)) {
-      setState(() {
-        _tagsActuals.add(text);
-        _nouTagController.clear();
-      });
+      widget.usuari.nom = _nomController.text.trim();
+      widget.usuari.fotoUrl = _imatgeUrlController.text.trim();
+      widget.usuari.tags = tagsAGuardar;
+
+      registrarActivitat(
+        "Perfil Actualitzat",
+        "Canvis desats amb èxit.",
+        Icons.person,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Perfil guardat!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Editar Perfil'),
-        centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _guardarCanvis,
-            tooltip: 'Guardar canvis',
-          ),
+          if (!_isSaving)
+            IconButton(icon: const Icon(Icons.save), onPressed: _guardarCanvis),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- SECCIÓ FOTO DE PERFIL ---
-            Center(
-              child: Stack(
+      body: _isSaving
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    backgroundImage: _imatgeUrlController.text.isNotEmpty
-                        ? NetworkImage(_imatgeUrlController.text)
-                        : null,
-                    child: _imatgeUrlController.text.isEmpty
-                        ? Text(
-                            widget.usuari.nom.isNotEmpty
-                                ? widget.usuari.nom[0].toUpperCase()
-                                : '?',
-                            style: const TextStyle(
-                              fontSize: 50,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                        : null,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
+                  // Previsualización de la imagen basada en la URL del controlador
+                  Center(
                     child: CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.white,
-                      child: IconButton(
-                        icon: const Icon(Icons.camera_alt, size: 20),
-                        onPressed: () {
-                          // Lògica per canviar foto (obrir diàleg URL o galeria)
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Funció de canviar foto no implementada',
-                              ),
-                            ),
-                          );
-                        },
+                      radius: 65,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      backgroundImage: _imatgeUrlController.text.isNotEmpty
+                          ? NetworkImage(_imatgeUrlController.text)
+                          : null,
+                      child: _imatgeUrlController.text.isEmpty
+                          ? const Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Colors.white,
+                            )
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Campo para el Nombre
+                  TextField(
+                    controller: _nomController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nom d\'usuari',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.person),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Campo para la URL de la imagen
+                  TextField(
+                    controller: _imatgeUrlController,
+                    decoration: const InputDecoration(
+                      labelText: 'URL de la imatge de perfil',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.link),
+                      hintText: 'https://ejemplo.com/foto.jpg',
+                    ),
+                    onChanged: (value) {
+                      // Refrescamos la UI para mostrar la nueva imagen mientras se escribe
+                      setState(() {});
+                    },
+                  ),
+                  const SizedBox(height: 30),
+
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Els teus interessos",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8.0,
+                    runSpacing: 0.0,
+                    children: _tagsDisponibles.map((tag) {
+                      // Aquí comparamos con _tagsSeleccionats, que ahora ya tiene los datos iniciales
+                      final isSelected = _tagsSeleccionats.contains(tag);
+
+                      return FilterChip(
+                        label: Text(tag),
+                        selected: isSelected,
+                        selectedColor: colorScheme.secondary.withValues(
+                          alpha: 0.3,
+                        ),
+                        checkmarkColor: colorScheme.secondary,
+                        onSelected: (bool selected) {
+                          setState(() {
+                            if (selected) {
+                              _tagsSeleccionats.add(tag);
+                            } else {
+                              _tagsSeleccionats.remove(tag);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 30),
-
-            // --- CAMPS DE TEXT ---
-            const Text(
-              "Informació Personal",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 15),
-
-            // Nom
-            TextField(
-              controller: _nomController,
-              decoration: const InputDecoration(
-                labelText: 'Nom d\'usuari',
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 15),
-
-            // URL Imatge (Simulat per provar la foto)
-            TextField(
-              controller: _imatgeUrlController,
-              decoration: const InputDecoration(
-                labelText: 'URL de la foto (opcional)',
-                prefixIcon: Icon(Icons.image),
-                border: OutlineInputBorder(),
-                helperText: "Enganxa una URL per provar l'avatar",
-              ),
-              onChanged: (val) => setState(() {}), // Per refrescar l'avatar
-            ),
-            const SizedBox(height: 15),
-
-            // Correu (Simulat)
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Correu electrònic',
-                prefixIcon: Icon(Icons.email),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 15),
-
-            // Contrasenya (Simulat)
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Contrasenya',
-                prefixIcon: Icon(Icons.lock),
-                border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.visibility),
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            // --- SECCIÓ INTERESSOS (TAGS) ---
-            const Text(
-              "Els teus interessos",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-
-            // Input per afegir tags
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _nouTagController,
-                    decoration: const InputDecoration(
-                      hintText: 'Afegir nou interès (ex: Thriller)',
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
-                    onSubmitted: (_) => _afegirTag(),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                IconButton(
-                  onPressed: _afegirTag,
-                  icon: const Icon(Icons.add_circle, size: 32),
-                  color: Theme.of(context).primaryColor,
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-
-            // Llista de Chips (Tags)
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 4.0,
-              children: _tagsActuals.map((tag) {
-                return Chip(
-                  label: Text(tag),
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
-                  deleteIcon: const Icon(Icons.close, size: 18),
-                  onDeleted: () {
-                    setState(() {
-                      _tagsActuals.remove(tag);
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-
-            const SizedBox(height: 40),
-
-            // Botó Guardar Gran
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _guardarCanvis,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text(
-                  'GUARDAR CANVIS',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

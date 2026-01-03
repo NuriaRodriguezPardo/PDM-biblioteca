@@ -1,9 +1,11 @@
 import 'clases/canço.dart'; // Asegúrate de que la ruta sea correcta
 import 'clases/llibre.dart';
+import 'clases/usuari.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 List<Llibre> llistaLlibresGlobal = [];
 List<Canco> llistaCanconsGlobal = [];
+List<Usuari> llistaUsuarisGlobal = [];
 
 // 1. Definimos la referencia a la colección fuera de las funciones para reutilizarla.
 final coleccionLibros = FirebaseFirestore.instance
@@ -38,15 +40,34 @@ final coleccionCancons = FirebaseFirestore.instance
       },
     );
 
+final coleccionUsuaris = FirebaseFirestore.instance
+    .collection('usuaris')
+    .withConverter<Usuari>(
+      fromFirestore: (snapshot, _) => Usuari.fromJson(snapshot.data()!),
+      toFirestore: (usuari, _) => {
+        'uid': usuari.id,
+        'nom': usuari.nom,
+        'email': usuari.email,
+        'fotoUrl': usuari.fotoUrl,
+        'interessos': usuari.tags,
+        'pendents': usuari.pendents,
+        'llegits': usuari.llegits,
+        'reserves': usuari.reserves,
+        'seguidors': usuari.seguidors,
+        'amics': usuari.amics,
+      },
+    );
+
 Future<void> inicialitzarDadesGlobals() async {
   try {
     final queryLibros = await coleccionLibros.get();
     llistaLlibresGlobal = queryLibros.docs.map((doc) => doc.data()).toList();
 
-    // Carga de canciones (asumiendo estructura similar)
     final queryCancons = await coleccionCancons.get();
     llistaCanconsGlobal = queryCancons.docs.map((doc) => doc.data()).toList();
-    // Aquí podrías mapear tus canciones si Canco tiene un factory similar
+
+    final queryUsuaris = await coleccionUsuaris.get();
+    llistaUsuarisGlobal = queryUsuaris.docs.map((doc) => doc.data()).toList();
   } catch (e) {
     print("Error cargando datos globales: $e");
   }
@@ -67,6 +88,14 @@ Canco? getCancoById(String id) {
     return llistaCanconsGlobal.firstWhere((c) => c.id == id);
   } catch (e) {
     print("Error: No se encontró la canción con ID $id");
+    return null;
+  }
+}
+
+Usuari? getUsuariById(String id) {
+  try {
+    return llistaUsuarisGlobal.firstWhere((u) => u.id == id);
+  } catch (e) {
     return null;
   }
 }

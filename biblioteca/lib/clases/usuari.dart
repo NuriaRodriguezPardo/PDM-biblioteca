@@ -1,9 +1,11 @@
 class Usuari {
   final String id;
   String nom;
+  String? email;
   String? fotoUrl;
 
-  List<String> tags;
+  // Todas tus listas originales recuperadas
+  List<String> tags; // Se mapea desde 'interessos' en Firestore
   List<String> pendents;
   List<String> llegits;
   List<String> reserves;
@@ -13,6 +15,7 @@ class Usuari {
   Usuari({
     required this.id,
     required this.nom,
+    this.email,
     this.fotoUrl,
     List<String>? tags,
     List<String>? pendents,
@@ -27,23 +30,53 @@ class Usuari {
        seguidors = seguidors ?? [],
        amics = amics ?? [];
 
+  // Constructor JSON robusto: Evita el error de Pigeon forzando el tipo String
   Usuari.fromJson(Map<String, dynamic> json)
-    : id = json['id'].toString(),
+    : id = json['uid']?.toString() ?? json['id']?.toString() ?? '',
       nom = json['nom'] ?? 'Usuari Desconegut',
+      email = json['email'],
       fotoUrl = json['fotoUrl'],
-      tags = List<String>.from(json['tags'] ?? []),
-      pendents = List<String>.from(json['pendents'] ?? []),
-      llegits = List<String>.from(json['llegits'] ?? []),
-      reserves = List<String>.from(json['reserves'] ?? []),
-      seguidors = List<String>.from(json['seguidors'] ?? []),
-      amics = List<String>.from(json['amics'] ?? []);
+      // Mapeo seguro de todas las listas
+      tags =
+          (json['interessos'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+          [],
+      pendents =
+          (json['pendents'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      llegits =
+          (json['llegits'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      reserves =
+          (json['reserves'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      seguidors =
+          (json['seguidors'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      amics =
+          (json['amics'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [];
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'uid': id,
       'nom': nom,
+      'email': email,
       'fotoUrl': fotoUrl,
-      'tags': tags,
+      'interessos':
+          tags, // Mantenemos el nombre de campo 'interessos' para el registro
       'pendents': pendents,
       'llegits': llegits,
       'reserves': reserves,

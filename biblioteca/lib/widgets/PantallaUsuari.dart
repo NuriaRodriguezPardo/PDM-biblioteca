@@ -1,17 +1,20 @@
+import 'package:biblioteca/usuarios/auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Necesario para obtener el ID actual
 import '../clases/usuari.dart';
 import '../clases/llibre.dart';
 import 'PantallaLlibre.dart';
-import '../carregaDeDades.dart'; // Importat per accedir a les dades globals i loadAllDataMap
 import 'PantallaEditarPerfil.dart';
 import '../clases/carregaDeHistorial.dart';
-import '../internalLists.dart';
+import '../InternalLists.dart';
 
 class PantallaUsuari extends StatefulWidget {
   static String route = '/PantallaUsuaris';
-  final Usuari usuari;
 
-  const PantallaUsuari({super.key, required this.usuari});
+  // Cambio: Quitamos el 'required' y lo hacemos opcional con '?'
+  final Usuari? usuari;
+
+  const PantallaUsuari({super.key, this.usuari});
 
   @override
   State<PantallaUsuari> createState() => _PantallaUsuariState();
@@ -20,43 +23,80 @@ class PantallaUsuari extends StatefulWidget {
 class _PantallaUsuariState extends State<PantallaUsuari>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late Usuari _usuariVisualitzat;
+  Usuari? _usuariVisualitzat;
+  bool _isLoading = true; // Para mostrar un cargando
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _usuariVisualitzat = widget.usuari;
+    _cargarDatos();
   }
 
   @override
   void dispose() {
+    // Asegúrate de que _tabController esté inicializado si lo usas
     _tabController.dispose();
     super.dispose();
   }
 
-  /// Helper per obtenir un objecte Usuari a partir del seu ID (String).
-  Usuari _getUsuariById(String id) {
-    final allData = loadAllDataMap();
-    final usersList = allData['usuaris'] as List<dynamic>;
+  Future<void> _cargarDatos() async {
+    // Si pasamos un usuario por constructor, visualizamos ese (perfil de otro)
+    if (widget.usuari != null) {
+      setState(() {
+        _usuariVisualitzat = widget.usuari;
+        _isLoading = false;
+      });
+      return;
+    }
 
-    final userJson = usersList.firstWhere(
-      (u) => u['id'].toString() == id,
-      orElse: () => null,
-    );
-
-    if (userJson != null) {
-      return Usuari.fromJson(userJson);
-    } else {
-      return Usuari(id: id, nom: 'Usuari Desconegut');
+    // Si no hay usuario en el constructor, cargamos el nuestro de Firebase
+    setState(() => _isLoading = true);
+    try {
+      final datos = await obtenerDatosPerfil();
+      if (datos != null) {
+        setState(() {
+          _usuariVisualitzat = datos;
+          _isLoading = false;
+        });
+      } else {
+        _manejarUsuarioNoEncontrado();
+      }
+    } catch (e) {
+      debugPrint("Error cargando perfil: $e");
+      setState(() => _isLoading = false);
     }
   }
 
+  void _manejarUsuarioNoEncontrado() {
+    final userAuth = FirebaseAuth.instance.currentUser;
+    setState(() {
+      _usuariVisualitzat = Usuari(
+        id: userAuth?.uid ?? 'anonim',
+        nom: userAuth?.displayName ?? 'Usuari Nou',
+        email: userAuth?.email,
+        fotoUrl: userAuth?.photoURL,
+      );
+      _isLoading = false;
+    });
+  }
+
+  // Borra o ignora _getUsuariById si vas a usar Firebase,
+  // ya no es eficiente buscar en un mapa local si tienes los datos en la nube.
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_usuariVisualitzat == null) {
+      return const Scaffold(
+        body: Center(child: Text("No s'ha pogut carregar el perfil")),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.usuari.nom),
+        title: Text(_usuariVisualitzat!.nom),
         centerTitle: true,
         actions: [
           IconButton(
@@ -73,14 +113,10 @@ class _PantallaUsuariState extends State<PantallaUsuari>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 1. Informació Principal de l'Usuari
             _buildCapcalera(context),
             _buildEstadistiques(context),
             _buildTags(context),
-
             const SizedBox(height: 16),
-
-            // 2. Secció de Llibres (Utilitza TabBar)
             _buildSeccioLlibres(context),
           ],
         ),
@@ -88,7 +124,6 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     );
   }
 
-  // Capçalera amb foto de perfil i info personal
   Widget _buildCapcalera(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -98,20 +133,17 @@ class _PantallaUsuariState extends State<PantallaUsuari>
           CircleAvatar(
             radius: 50,
             backgroundColor: Theme.of(context).colorScheme.secondary,
-            // SI TENIM URL, LA MOSTREM. SI NO, NULL (i es veurà la lletra)
             backgroundImage:
-                (_usuariVisualitzat.fotoUrl != null &&
-                    _usuariVisualitzat.fotoUrl!.isNotEmpty)
-                ? NetworkImage(_usuariVisualitzat.fotoUrl!)
+                (_usuariVisualitzat!.fotoUrl != null &&
+                    _usuariVisualitzat!.fotoUrl!.isNotEmpty)
+                ? NetworkImage(_usuariVisualitzat!.fotoUrl!)
                 : null,
-
-            // CHILD: Només mostrem la inicial si NO hi ha foto
             child:
-                (_usuariVisualitzat.fotoUrl == null ||
-                    _usuariVisualitzat.fotoUrl!.isEmpty)
+                (_usuariVisualitzat!.fotoUrl == null ||
+                    _usuariVisualitzat!.fotoUrl!.isEmpty)
                 ? Text(
-                    _usuariVisualitzat.nom.isNotEmpty
-                        ? _usuariVisualitzat.nom[0].toUpperCase()
+                    _usuariVisualitzat!.nom.isNotEmpty
+                        ? _usuariVisualitzat!.nom[0].toUpperCase()
                         : '?',
                     style: const TextStyle(
                       fontSize: 40,
@@ -119,34 +151,27 @@ class _PantallaUsuariState extends State<PantallaUsuari>
                       color: Colors.white,
                     ),
                   )
-                : null, // Si hi ha foto, child és null
+                : null,
           ),
           const SizedBox(height: 12),
           Text(
-            widget.usuari.nom,
+            _usuariVisualitzat!.nom,
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
-          Text(
-            'ID: ${widget.usuari.id}',
-            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            textAlign: TextAlign.center,
-          ),
+
           const SizedBox(height: 16),
           OutlinedButton.icon(
-            onPressed: () {
-              // NAVEGACIÓ A PANTALLA EDITAR PERFIL
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
-                      PantallaEditarPerfil(usuari: widget.usuari),
+                      PantallaEditarPerfil(usuari: _usuariVisualitzat!),
                 ),
-              ).then((_) {
-                // Quan tornem, refresquem la pantalla per si han canviat els tags
-                setState(() {});
-              });
+              );
+              // Al volver, recargamos para ver los cambios
+              _cargarDatos();
             },
             icon: const Icon(Icons.edit),
             label: const Text('Editar perfil'),
@@ -156,7 +181,6 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     );
   }
 
-  // Estadístiques: Seguidors, Amics, Llibres llegits
   Widget _buildEstadistiques(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -169,31 +193,31 @@ class _PantallaUsuariState extends State<PantallaUsuari>
             _buildEstadistica(
               context,
               'Seguidors',
-              widget.usuari.seguidors.length,
+              _usuariVisualitzat!.seguidors.length,
               Icons.people,
               () => _mostrarLlistaUsuaris(
                 context,
                 'Seguidors',
-                widget.usuari.seguidors,
+                _usuariVisualitzat!.seguidors,
               ),
             ),
             _buildDivisor(),
             _buildEstadistica(
               context,
               'Seguint',
-              widget.usuari.amics.length,
+              _usuariVisualitzat!.amics.length,
               Icons.person_add,
               () => _mostrarLlistaUsuaris(
                 context,
                 'Seguint',
-                widget.usuari.amics,
+                _usuariVisualitzat!.amics,
               ),
             ),
             _buildDivisor(),
             _buildEstadistica(
               context,
               'Llegits',
-              widget.usuari.llegits.length,
+              _usuariVisualitzat!.llegits.length,
               Icons.check_circle_outline,
               null,
             ),
@@ -201,7 +225,7 @@ class _PantallaUsuariState extends State<PantallaUsuari>
             _buildEstadistica(
               context,
               'Pendents',
-              widget.usuari.pendents.length,
+              _usuariVisualitzat!.pendents.length,
               Icons.bookmark_border,
               null,
             ),
@@ -245,9 +269,8 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     );
   }
 
-  // Tags / Interessos
   Widget _buildTags(BuildContext context) {
-    if (widget.usuari.tags.isEmpty) {
+    if (_usuariVisualitzat!.tags.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -276,10 +299,9 @@ class _PantallaUsuariState extends State<PantallaUsuari>
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: widget.usuari.tags.map((tag) {
+              children: _usuariVisualitzat!.tags.map((tag) {
                 return Chip(
                   label: Text(tag),
-                  // CORRECCIÓ: Substituït withOpacity(0.1) per withValues(alpha: 0.1)
                   backgroundColor: Theme.of(
                     context,
                   ).colorScheme.secondary.withValues(alpha: 0.1),
@@ -295,7 +317,6 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     );
   }
 
-  // Secció de llibres amb tabs
   Widget _buildSeccioLlibres(BuildContext context) {
     return Card(
       margin: const EdgeInsets.all(16),
@@ -317,8 +338,8 @@ class _PantallaUsuariState extends State<PantallaUsuari>
             child: TabBarView(
               controller: _tabController,
               children: [
-                ActivitatRecentTab(),
-                RecomanacionsTab(tagsUsuari: widget.usuari.tags),
+                const ActivitatRecentTab(),
+                RecomanacionsTab(tagsUsuari: _usuariVisualitzat!.tags),
               ],
             ),
           ),
@@ -327,7 +348,6 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     );
   }
 
-  // Modal per mostrar llista de seguidors/seguint
   void _mostrarLlistaUsuaris(
     BuildContext context,
     String titol,
@@ -336,82 +356,98 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor:
+          Colors.transparent, // Permite bordes redondeados en el modal
       builder: (context) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          minChildSize: 0.3,
+          initialChildSize: 0.6,
           maxChildSize: 0.9,
+          minChildSize: 0.4,
           expand: false,
           builder: (context, scrollController) {
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        titol,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
                 ),
-                const Divider(height: 1),
-                Expanded(
-                  child: idsUsuaris.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No hi ha $titol',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        )
-                      : ListView.builder(
-                          controller: scrollController,
-                          itemCount: idsUsuaris.length,
-                          itemBuilder: (context, index) {
-                            final id = idsUsuaris[index];
-                            final usuari = _getUsuariById(id);
+              ),
+              child: Column(
+                children: [
+                  // Barra estética superior del modal
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    height: 4,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      titol,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: idsUsuaris.isEmpty
+                        ? Center(
+                            child: Text("No hi ha usuaris en aquesta llista"),
+                          )
+                        : ListView.builder(
+                            controller: scrollController,
+                            itemCount: idsUsuaris.length,
+                            itemBuilder: (context, index) {
+                              final String id = idsUsuaris[index];
 
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Theme.of(
-                                  context,
-                                ).colorScheme.secondary,
-                                child: Text(
-                                  usuari.nom.isNotEmpty
-                                      ? usuari.nom[0].toUpperCase()
-                                      : '?',
-                                  style: const TextStyle(color: Colors.white),
+                              // USAMOS EL HELPER DE INTERNALLISTS
+                              // Si no existe en la lista, creamos uno temporal con el ID
+                              final usuari =
+                                  getUsuariById(id) ??
+                                  Usuari(id: id, nom: "Usuari desconegut");
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
+                                  backgroundImage:
+                                      (usuari.fotoUrl != null &&
+                                          usuari.fotoUrl!.isNotEmpty)
+                                      ? NetworkImage(usuari.fotoUrl!)
+                                      : null,
+                                  child:
+                                      (usuari.fotoUrl == null ||
+                                          usuari.fotoUrl!.isEmpty)
+                                      ? Text(
+                                          usuari.nom.isNotEmpty
+                                              ? usuari.nom[0].toUpperCase()
+                                              : "?",
+                                        )
+                                      : null,
                                 ),
-                              ),
-                              title: Text(
-                                usuari.nom,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                title: Text(usuari.nom),
+                                subtitle: Text(
+                                  usuari.id ==
+                                          FirebaseAuth.instance.currentUser?.uid
+                                      ? "Tu"
+                                      : "",
                                 ),
-                              ),
-                              subtitle: Text('ID: ${usuari.id}'),
-                              trailing: OutlinedButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
+                                trailing: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 16,
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context); // Cierra el modal
+
+                                  // Si el usuario clickeado es el mismo que ya estamos viendo, no hacemos nada
+                                  if (_usuariVisualitzat?.id == usuari.id)
+                                    return;
+
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -420,13 +456,12 @@ class _PantallaUsuariState extends State<PantallaUsuari>
                                     ),
                                   );
                                 },
-                                child: const Text('Veure perfil'),
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ],
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
             );
           },
         );
@@ -436,7 +471,7 @@ class _PantallaUsuariState extends State<PantallaUsuari>
 }
 
 // -----------------------------------------------------------
-// WIDGETS AUXILIARS
+// NO TOCAR ESTOS WIDGETS: SÓN INDEPENDIENTES
 // -----------------------------------------------------------
 
 class ActivitatRecentTab extends StatelessWidget {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'PantallaRegistrarse.dart';
 import 'PantallaPrincipal.dart';
+import '/usuarios/auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PantallaLogin extends StatefulWidget {
   static const String route = '/login';
@@ -25,20 +27,62 @@ class _PantallaLoginState extends State<PantallaLogin> {
     super.dispose();
   }
 
+  // Lógica de inicio de sesión con Firebase (Correo)
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      // Simulación de login
-      await Future.delayed(const Duration(seconds: 2));
-      setState(() => _isLoading = false);
+      try {
+        // Llamamos a la función de auth.dart
+        await signIn(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
 
-      if (mounted) {
-        // Navegación directa a la pantalla principal
-        Navigator.pushReplacement(
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const PantallaPrincipal()),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _loginGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      User? user =
+          await signInWithGoogle(); // Llamada a la función de auth.dart
+
+      print("Usuario recibido: $user");
+
+      // Si el login es exitoso y el widget sigue activo
+      if (user != null && mounted) {
+        // Navegar a la pantalla principal
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const PantallaPrincipal()),
         );
       }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -53,15 +97,36 @@ class _PantallaLoginState extends State<PantallaLogin> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 60),
+              const SizedBox(height: 40),
               _buildHeader(colorScheme),
               const SizedBox(height: 40),
               _buildLoginForm(colorScheme),
               const SizedBox(height: 24),
               _buildLoginButton(colorScheme),
               const SizedBox(height: 16),
+
+              // Divisor visual para login social
+              Row(
+                children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      "O",
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ),
+                  const Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              _buildGoogleButton(colorScheme),
+              const SizedBox(height: 16),
               _buildForgotPassword(colorScheme),
-              const SizedBox(height: 60),
+              const SizedBox(height: 40),
               _buildRegisterLink(colorScheme),
             ],
           ),
@@ -73,12 +138,10 @@ class _PantallaLoginState extends State<PantallaLogin> {
   Widget _buildHeader(ColorScheme colorScheme) {
     return Column(
       children: [
-        // Icona central amb color secundari (Blau-verd)
         Container(
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            // CORREGIDO: withValues
             color: colorScheme.secondary.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(15),
           ),
@@ -89,20 +152,15 @@ class _PantallaLoginState extends State<PantallaLogin> {
           ),
         ),
         const SizedBox(height: 32),
-        Text(
+        const Text(
           'Benvingut/da!',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface, // Text Fosc
-          ),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
           'Inicia sessió per continuar',
           style: TextStyle(
             fontSize: 16,
-            // CORREGIDO: withValues
             color: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
@@ -111,12 +169,10 @@ class _PantallaLoginState extends State<PantallaLogin> {
   }
 
   Widget _buildLoginForm(ColorScheme colorScheme) {
-    // Els camps de text ja utilitzen el tema definit a AppBiblio, només cal especificar les icones
     return Form(
       key: _formKey,
       child: Column(
         children: [
-          // Correu electrònic
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
@@ -124,50 +180,36 @@ class _PantallaLoginState extends State<PantallaLogin> {
               labelText: 'Correu electrònic',
               prefixIcon: Icon(
                 Icons.email_outlined,
-                // CORREGIDO: withValues
-                color: colorScheme.secondary.withValues(alpha: 0.8),
+                color: colorScheme.secondary,
               ),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Si us plau, introdueix el correu';
-              }
-              return null;
-            },
+            validator: (value) => (value == null || value.isEmpty)
+                ? 'Introdueix el correu'
+                : null,
           ),
           const SizedBox(height: 16),
-
-          // Contrasenya
           TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               labelText: 'Contrasenya',
-              hintText: '••••••••',
               prefixIcon: Icon(
                 Icons.lock_outline,
-                // CORREGIDO: withValues
-                color: colorScheme.secondary.withValues(alpha: 0.8),
+                color: colorScheme.secondary,
               ),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
-                  // CORREGIDO: withValues
-                  color: colorScheme.secondary.withValues(alpha: 0.8),
                 ),
-                onPressed: () {
-                  setState(() => _obscurePassword = !_obscurePassword);
-                },
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
               ),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Si us plau, introdueix la contrasenya';
-              }
-              return null;
-            },
+            validator: (value) => (value == null || value.isEmpty)
+                ? 'Introdueix la contrasenya'
+                : null,
           ),
         ],
       ),
@@ -175,7 +217,6 @@ class _PantallaLoginState extends State<PantallaLogin> {
   }
 
   Widget _buildLoginButton(ColorScheme colorScheme) {
-    // El botó utilitza l'estil global d'ElevatedButton (Marró Suau)
     return SizedBox(
       height: 50,
       child: ElevatedButton(
@@ -185,8 +226,8 @@ class _PantallaLoginState extends State<PantallaLogin> {
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
-                  color: Colors.white,
                   strokeWidth: 2,
+                  color: Colors.white,
                 ),
               )
             : const Text(
@@ -197,19 +238,32 @@ class _PantallaLoginState extends State<PantallaLogin> {
     );
   }
 
+  Widget _buildGoogleButton(ColorScheme colorScheme) {
+    return SizedBox(
+      height: 50,
+      child: OutlinedButton.icon(
+        onPressed: _isLoading ? null : _loginGoogle,
+        icon: const Icon(
+          Icons.g_mobiledata,
+          size: 30,
+        ), // Puedes usar un logo de Google Asset aquí
+        label: const Text(
+          "Continua amb Google",
+          style: TextStyle(fontSize: 16),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: colorScheme.secondary.withValues(alpha: 0.5)),
+        ),
+      ),
+    );
+  }
+
   Widget _buildForgotPassword(ColorScheme colorScheme) {
     return TextButton(
-      onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Funcionalitat de recuperació')),
-        );
-      },
+      onPressed: () {},
       child: Text(
         'Has oblidat la contrasenya?',
-        style: TextStyle(
-          color: colorScheme.secondary, // Blau-verd
-          fontWeight: FontWeight.w500,
-        ),
+        style: TextStyle(color: colorScheme.secondary),
       ),
     );
   }
@@ -220,24 +274,19 @@ class _PantallaLoginState extends State<PantallaLogin> {
       children: [
         Text(
           'No tens compte? ',
-          // CORREGIDO: withValues
           style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6)),
         ),
         GestureDetector(
-          onTap: () {
-            // CONEXIÓN CORREGIDA: Navegación directa a PantallaRegistrarse
-            // Esto asegura que funcione aunque no tengas las rutas nombradas en main.dart
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const PantallaRegistrarse(),
-              ),
-            );
-          },
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PantallaRegistrarse(),
+            ),
+          ),
           child: Text(
             'Registra\'t',
             style: TextStyle(
-              color: colorScheme.primary, // Marró Suau
+              color: colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),

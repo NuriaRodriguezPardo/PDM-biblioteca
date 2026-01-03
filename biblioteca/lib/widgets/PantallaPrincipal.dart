@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // IMPORTANTE: Para gestionar el estado de la sesión
 import '../clases/llibre.dart';
-import '../clases/usuari.dart';
 import 'PantallaLlibre.dart';
 import 'PantallaMatch.dart';
 import 'pantallaBiblioteca.dart';
 import 'PantallaBusqueda.dart';
 import 'PantallaUsuari.dart';
 import '../InternalLists.dart';
-
-// Dades simulades per a PantallaMatch (Usuari Principal)
-final Usuari usuariActual = Usuari(id: "1", nom: "Usuari Principal");
+import '../usuarios/auth.dart'; // IMPORTANTE: Para la función de cierre de sesión
 
 class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
@@ -23,10 +21,13 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
   late List<Llibre> novedades;
   late List<Llibre> populares;
 
+  // Obtenemos el usuario actual de Firebase para mostrar sus datos reales
+  final User? user = FirebaseAuth.instance.currentUser;
+
   @override
   void initState() {
     super.initState();
-    _generarListasAleatorias();
+    _generarListasAleatorias(); // Mantenemos tu lógica de aleatoriedad original
   }
 
   void _generarListasAleatorias() {
@@ -38,7 +39,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
     copiaNovedades.shuffle();
     copiaPopulares.shuffle();
 
-    // Cogemos un máximo de 10 elementos (o menos si no hay suficientes)
+    // Cogemos un máximo de 10 elementos
     novedades = copiaNovedades.take(10).toList();
     populares = copiaPopulares.take(10).toList();
   }
@@ -66,7 +67,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PantallaUsuari(usuari: usuariActual),
+                  // PantallaUsuari detecta automáticamente al usuario logueado vía Firebase
+                  builder: (context) => const PantallaUsuari(),
                 ),
               );
             },
@@ -77,11 +79,21 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
+            UserAccountsDrawerHeader(
               decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-              child: const Text(
+              accountName: const Text(
                 'Menú Biblioteca',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+                style: TextStyle(fontSize: 20),
+              ),
+              // Mostramos el email real del usuario de Firebase
+              accountEmail: Text(user?.email ?? 'usuari@email.com'),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(
+                  Icons.person,
+                  size: 45,
+                  color: Theme.of(context).primaryColor,
+                ),
               ),
             ),
             ListTile(
@@ -105,10 +117,25 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        PantallaMatching(usuari: usuariActual),
+                    // PantallaMatching ya no requiere usuario estático
+                    builder: (context) => const PantallaMatching(),
                   ),
                 );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text(
+                'Tancar Sessió',
+                style: TextStyle(color: Colors.red),
+              ),
+              onTap: () async {
+                await signOut(); // Ejecuta el cierre de sesión en Firebase
+                if (mounted) {
+                  // Redirige a la pantalla de login tras cerrar sesión
+                  Navigator.pushReplacementNamed(context, '/login');
+                }
               },
             ),
           ],
@@ -200,14 +227,13 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
             Column(
               children: populares.map((llibre) {
                 return Card(
-                  elevation:
-                      1, // Añadimos un poco de elevación para ver mejor el borde
+                  elevation: 3,
                   margin: const EdgeInsets.only(bottom: 12),
+                  color: const Color.fromARGB(176, 255, 228, 221),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: ListTile(
-                    // ESTA ES LA CLAVE: Añade espacio interno para que la imagen no toque el borde
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
@@ -219,9 +245,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                               llibre.urlImatge!.isNotEmpty
                           ? Image.network(
                               llibre.urlImatge!,
-                              //width:
-                              //    55, // Un poco más ancha para que se vea mejor
-                              // height: 90,
+                              width: 50,
+                              height: 100,
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => Container(
                                 width: 55,

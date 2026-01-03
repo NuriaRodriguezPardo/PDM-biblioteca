@@ -1,11 +1,10 @@
 import 'package:biblioteca/widgets/PantallaLogin.dart';
-import 'package:biblioteca/widgets/PantallaPrincipal.dart';
 import 'package:flutter/material.dart';
 
 class AppBiblio extends StatelessWidget {
   const AppBiblio({super.key});
 
-  // Definició de la paleta de colors
+  // --- TUS COLORES ORIGINALES (INTACTOS) ---
   static const Color primaryCustom = Color(0xFF8F7561); // Marró Suau
   static const Color secondaryCustom = Color(0xFF5DA0A7); // Blau-verd
   static const Color errorCustom = Color(0xFFA25353); // Vermell Fosc
@@ -15,27 +14,23 @@ class AppBiblio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Definició del ColorScheme amb els colors personalitzats
+    // Definició del ColorScheme amb els teus colors
     final ColorScheme customColorScheme = ColorScheme.light(
-      primary: primaryCustom, // Color principal (AppBar, títols)
+      primary: primaryCustom,
       onPrimary: Colors.white,
-      secondary: secondaryCustom, // Color per Floating Action Buttons
+      secondary: secondaryCustom,
       onSecondary: Colors.white,
-      surface: Colors.white, // Color de les Cards
-      onSurface: darkTextCustom, // Text sobre la superfície
-      error: errorCustom, // Color d'error
-      //background: backgroundCustom, // Fons general
+      surface: Colors.white,
+      onSurface: darkTextCustom,
+      error: errorCustom,
     );
 
     return MaterialApp(
       title: 'App Llibres',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // Utilitzem el ColorScheme personalitzat
         colorScheme: customColorScheme,
-        // Apliquem colors a elements clau per a consistència
         appBarTheme: const AppBarTheme(
-          //color: primaryCustom,
           foregroundColor: Colors.white,
           centerTitle: true,
         ),
@@ -43,11 +38,12 @@ class AppBiblio extends StatelessWidget {
           backgroundColor: secondaryCustom,
           foregroundColor: Colors.white,
         ),
-        // Color del fons (si es vol canviar del scaffoldBackgroundColor)
-        scaffoldBackgroundColor: backgroundCustom,
+        scaffoldBackgroundColor: backgroundCustom, // Tu fondo original
         useMaterial3: false,
       ),
-      home: const PantallaPrincipal(),
+      // LÓGICA DE AUTO-LOGIN MANTENIENDO EL DISEÑO
+      // En tu archivo AppBiblio o main.dart
+      home: PantallaLogin(),
     );
   }
 }

@@ -18,22 +18,27 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
   final List<Llibre> llibresPerMostrar = llistaLlibresGlobal;
   @override
   Widget build(BuildContext context) {
-    // Filtre de cerca
-    final resultados = llistaLlibresGlobal.where((llibre) {
-      final tituloMatch = llibre.titol.toLowerCase().contains(
-        query.toLowerCase(),
-      );
-      final autorMatch = llibre.autor.toLowerCase().contains(
-        query.toLowerCase(),
-      );
+    // Definimos la lista de resultados basándonos en si hay búsqueda o no
+    List<Llibre> resultados;
 
-      // Opcional: També pots buscar per tags si vols
-      final tagMatch = llibre.tags.any(
-        (tag) => tag.toLowerCase().contains(query.toLowerCase()),
-      );
+    if (query.isEmpty) {
+      // SI NO HAY BÚSQUEDA: Mostramos solo los 5 primeros (o una muestra aleatoria)
+      // Usamos .take(10) para asegurar que no intentamos coger más de los que hay
+      resultados = llistaLlibresGlobal.take(5).toList();
+    } else {
+      // SI HAY BÚSQUEDA: Filtramos todos los que coincidan
+      resultados = llistaLlibresGlobal.where((llibre) {
+        final queryLower = query.toLowerCase();
 
-      return tituloMatch || autorMatch || tagMatch;
-    }).toList();
+        final tituloMatch = llibre.titol.toLowerCase().contains(queryLower);
+        final autorMatch = llibre.autor.toLowerCase().contains(queryLower);
+        final tagMatch = llibre.tags.any(
+          (tag) => tag.toLowerCase().contains(queryLower),
+        );
+
+        return tituloMatch || autorMatch || tagMatch;
+      }).toList();
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Buscar llibres')),
@@ -42,10 +47,16 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
         child: Column(
           children: [
             TextField(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Buscar per títol, autor o etiqueta...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: query.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => setState(() => query = ''),
+                      )
+                    : null,
+                border: const OutlineInputBorder(),
               ),
               onChanged: (value) {
                 setState(() {
@@ -54,6 +65,21 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
               },
             ),
             const SizedBox(height: 20),
+            // Subtítulo informativo opcional
+            if (query.isEmpty)
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    'Suggeriments per a tu:',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
             Expanded(
               child: resultados.isNotEmpty
                   ? ListView.builder(
@@ -61,26 +87,28 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
                       itemBuilder: (context, index) {
                         final llibre = resultados[index];
                         return ListTile(
-                          leading: llibre.urlImatge != null
-                              ? Image.network(
-                                  llibre.urlImatge!,
-                                  width: 50,
-                                  height: 75, // Afegit height per proporció
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    // Si la imatge falla, mostrem icona
-                                    return const Icon(
-                                      Icons.broken_image,
-                                      size: 40,
-                                    );
-                                  },
-                                )
-                              : const Icon(Icons.book, size: 40),
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: llibre.urlImatge != null
+                                ? Image.network(
+                                    llibre.urlImatge!,
+                                    width: 45,
+                                    height: 70,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(
+                                              Icons.broken_image,
+                                              size: 40,
+                                            ),
+                                  )
+                                : const Icon(Icons.book, size: 40),
+                          ),
                           title: Text(llibre.titol),
                           subtitle: Text(llibre.autor),
                           trailing: const Icon(
                             Icons.arrow_forward_ios,
-                            size: 16,
+                            size: 14,
                           ),
                           onTap: () {
                             Navigator.push(

@@ -1,32 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Importante para Auth
 import 'dart:math';
 import '../clases/llibre.dart';
-import '../clases/usuari.dart';
 import '../clases/canço.dart';
 import '../clases/carregaDeHistorial.dart';
 import '../InternalLists.dart';
 
 class PantallaMatching extends StatefulWidget {
   static String route = '/PantallaMatching';
-  final Usuari usuari;
-  const PantallaMatching({super.key, required this.usuari});
+  // Ya no requerimos el parámetro 'usuari' en el constructor
+  const PantallaMatching({super.key});
 
   @override
   State<PantallaMatching> createState() => _PantallaMatchingState();
 }
 
 class _PantallaMatchingState extends State<PantallaMatching> {
-  // Llista de totes les cançons disponibles
   List<Canco> _allCancons = [];
-
-  // La llista de 10 cançons aleatòries per mostrar a l'usuari
   List<Canco> _canconsMostrades = [];
-
-  // La cançó que l'usuari ha seleccionat
   Canco? _cancoSeleccionada;
-
-  // El llibre assignat (resultat del matching)
   Llibre? _llibreAssignat;
+
+  // Obtenemos el usuario actual de Firebase
+  final User? firebaseUser = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -35,7 +31,6 @@ class _PantallaMatchingState extends State<PantallaMatching> {
     _canconsMostrades = _seleccionarCanconsAleatories(_allCancons, 10);
   }
 
-  // Lògica per seleccionar 10 cançons aleatòries i variades
   List<Canco> _seleccionarCanconsAleatories(
     List<Canco> totesLesCancons,
     int num,
@@ -43,14 +38,11 @@ class _PantallaMatchingState extends State<PantallaMatching> {
     if (totesLesCancons.isEmpty) return [];
     if (totesLesCancons.length <= num) return totesLesCancons;
 
-    // Usarem un set per controlar la varietat de tags
     final List<Canco> seleccionades = [];
     final Set<String> tagsUsats = {};
     final Random random = Random();
 
-    // Intentem seleccionar cançons que aportin nous tags
     while (seleccionades.length < num) {
-      // Elegim un índex aleatori
       final int index = random.nextInt(totesLesCancons.length);
       final Canco cancoActual = totesLesCancons[index];
 
@@ -62,20 +54,15 @@ class _PantallaMatchingState extends State<PantallaMatching> {
         }
       }
 
-      // Si la cançó aporta un tag nou O si ja hem intentat molt i necessitem omplir
       if (teNouTag || seleccionades.length < num * 0.5) {
         if (!seleccionades.contains(cancoActual)) {
           seleccionades.add(cancoActual);
-          // Afegim els seus tags al set de control
           tagsUsats.addAll(cancoActual.tags);
         }
       }
-
-      // Mesura de seguretat per evitar bucles infinits en col·leccions petites
       if (seleccionades.length == totesLesCancons.length) break;
     }
 
-    // Si encara ens falten, les omplim amb les que quedin aleatòriament
     while (seleccionades.length < num) {
       final int index = random.nextInt(totesLesCancons.length);
       final Canco cancoActual = totesLesCancons[index];
@@ -83,18 +70,12 @@ class _PantallaMatchingState extends State<PantallaMatching> {
         seleccionades.add(cancoActual);
       }
     }
-
     return seleccionades;
   }
-
-  // ------------------
-  // ACCIONS DE L'USUARI
-  // ------------------
 
   void _seleccionarCanco(Canco canco) {
     setState(() {
       _cancoSeleccionada = canco;
-      // Una vegada seleccionada la cançó, busquem el llibre associat
       _llibreAssignat = _getLlibrePerCanco(canco);
 
       if (_llibreAssignat != null && _llibreAssignat!.id != "-1") {
@@ -109,24 +90,27 @@ class _PantallaMatchingState extends State<PantallaMatching> {
 
   @override
   Widget build(BuildContext context) {
+    // Usamos el nombre de Firebase o un fallback si no está disponible
+    String nomUsuari =
+        firebaseUser?.displayName ?? firebaseUser?.email ?? "Usuari";
+
     return Scaffold(
-      appBar: AppBar(title: Text('Matching de llibre a ${widget.usuari.nom}')),
+      appBar: AppBar(title: Text('Matching de llibre per a $nomUsuari')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (_cancoSeleccionada == null)
-              _buildSeleccioCanco() // Mostrem la selecció de cançons
+              _buildSeleccioCanco()
             else
-              _buildResultatMatching(), // Mostrem el resultat del matching
+              _buildResultatMatching(),
           ],
         ),
       ),
     );
   }
 
-  // Widget per a la selecció de cançons
   Widget _buildSeleccioCanco() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,15 +120,14 @@ class _PantallaMatchingState extends State<PantallaMatching> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2, // 2 columnes
+            crossAxisCount: 2,
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
-            childAspectRatio: 2.5, // Targetes més horitzontals
+            childAspectRatio: 2.5,
           ),
           itemCount: _canconsMostrades.length,
           itemBuilder: (context, index) {
@@ -183,7 +166,6 @@ class _PantallaMatchingState extends State<PantallaMatching> {
     );
   }
 
-  // Widget per mostrar el resultat
   Widget _buildResultatMatching() {
     return Center(
       child: Column(
@@ -214,11 +196,9 @@ class _PantallaMatchingState extends State<PantallaMatching> {
           const SizedBox(height: 40),
           ElevatedButton(
             onPressed: () {
-              // Resetear per tornar a la selecció
               setState(() {
                 _cancoSeleccionada = null;
                 _llibreAssignat = null;
-                // Generar nova llista aleatòria per a la següent vegada
                 _canconsMostrades = _seleccionarCanconsAleatories(
                   _allCancons,
                   10,
@@ -233,22 +213,13 @@ class _PantallaMatchingState extends State<PantallaMatching> {
   }
 }
 
-// FUNCIO HELPER EXTERNA
-
 Llibre _getLlibrePerCanco(Canco canco) {
-  // 1. Obtenir tots els llibres disponibles (Usant la variable global de carregaDeDades)
   final List<Llibre> allLlibres = llistaLlibresGlobal;
-
-  // 2. Iterar sobre tots els llibres
   for (final llibre in allLlibres) {
-    // 3. Comprovar si la llista de cançons del llibre conté la cançó seleccionada
-    // CORRECCIÓ: llibre.playlist és List<String>, per tant busquem 'canco.id'
     if (llibre.playlist.contains(canco.id)) {
       return llibre;
     }
   }
-
-  // 4. Cas de fallback (si la cançó no està associada a cap llibre)
   return Llibre(
     id: "-1",
     titol: 'Llibre no trobat (Sin Match)',

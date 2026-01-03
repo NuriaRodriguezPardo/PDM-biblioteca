@@ -12,7 +12,20 @@
           "package_name": "com.example.biblioteca"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "631203151510-gpg0mlcjriau9tr2ll4hd8r5qmki3o9j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.biblioteca",
+            "certificate_hash": "e6f8b1ba89f0022b44b9e2d4ef0b9dfc7cdb0916"
+          }
+        },
+        {
+          "client_id": "631203151510-cih1b1fhg25auvtm2gsqdd0itip11nju.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAOIzeK7shF-Sxtr6tDDx2exXiBl7WCmgg"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "631203151510-c8cvlqm7eihgkd9dfk6le5f6v33s38s8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "631203151510-d1qo9tsr9gga2e0l9pht8u1sb52kefsq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.biblioteca"
+              }
+            }
+          ]
         }
       }
     }
