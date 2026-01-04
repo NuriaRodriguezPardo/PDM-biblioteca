@@ -238,12 +238,25 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
     final usuari = getUsuariById(currentUser ?? "");
     if (usuari != null) {
       setState(() {
+        // 1. Lògica excloent: si estava a llegits, el treiem
+        usuari.llegits.remove(widget.llibre.id);
+
+        // 2. Afegim a pendents
         usuari.pendents.add(widget.llibre.id);
       });
-      // Sincronizar con Firebase
+
+      // 3. Sincronitzem amb Firebase (actualitzem ambdós camps per seguretat)
       FirebaseFirestore.instance.collection('usuaris').doc(currentUser).update({
         'pendents': usuari.pendents,
+        'llegits': usuari.llegits,
       });
+
+      // 4. Registrem al historial
+      registrarActivitat(
+        "Llibre pendent",
+        "Afegit a pendents: ${widget.llibre.titol}",
+        Icons.bookmark_border,
+      );
     }
   }
 
@@ -252,14 +265,25 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
     final usuari = getUsuariById(currentUser ?? "");
     if (usuari != null) {
       setState(() {
-        usuari.llegits.add(widget.llibre.id);
+        // 1. Lògica excloent: si estava a pendents, el treiem
         usuari.pendents.remove(widget.llibre.id);
+
+        // 2. Afegim a llegits
+        usuari.llegits.add(widget.llibre.id);
       });
-      // Sincronizar ambos campos en Firebase
+
+      // 3. Sincronitzem amb Firebase
       FirebaseFirestore.instance.collection('usuaris').doc(currentUser).update({
         'llegits': usuari.llegits,
         'pendents': usuari.pendents,
       });
+
+      // 4. Registrem al historial
+      registrarActivitat(
+        "Llibre llegit",
+        "Has acabat de llegir: ${widget.llibre.titol}",
+        Icons.check_circle,
+      );
     }
   }
 
@@ -494,6 +518,45 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
                 ),
               ],
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // BOTÓN PENDENTS
+                ElevatedButton.icon(
+                  onPressed: _estaAPendents() ? null : _afegirAPendents,
+                  icon: Icon(
+                    Icons.bookmark,
+                    color: _estaAPendents() ? Colors.white : Colors.black,
+                  ),
+                  label: const Text('Pendent'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _estaAPendents()
+                        ? Colors.orange
+                        : Colors.grey[200],
+                    foregroundColor: _estaAPendents()
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                ),
+                // BOTÓN MARCAR COM LLEGIT
+                ElevatedButton.icon(
+                  onPressed: _estaALlegits() ? null : _marcarComLlegit,
+                  icon: Icon(
+                    Icons.check_circle,
+                    color: _estaALlegits() ? Colors.white : Colors.green,
+                  ),
+                  label: const Text('Llegit'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _estaALlegits()
+                        ? Colors.green
+                        : Colors.grey[200],
+                    foregroundColor: _estaALlegits()
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 30),
             _buildFormulariValoracio(), // <--- Tu nueva sección aquí
             const SizedBox(height: 20),
@@ -614,6 +677,13 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
                         llista.id,
                       ) // Asegúrate que tu clase LlistaPersonalitzada tenga el campo id
                       .update({'llibres': llista.llibres});
+
+                  registrarActivitat(
+                    "Afegit a llista",
+                    "${widget.llibre.titol} afegit a la llista: ${llista.nom}",
+                    Icons.playlist_add,
+                  );
+
                   Navigator.pop(context);
                 },
               );

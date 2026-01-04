@@ -76,14 +76,15 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
     LlistaPersonalitzada llista,
     String idLlibre,
   ) async {
-    setState(() {
-      llista.llibres.remove(idLlibre);
-    });
-
+    // Simplemente actualizamos Firebase
     await FirebaseFirestore.instance
         .collection('llistes_personalitzades')
         .doc(llista.id)
-        .update({'llibres': llista.llibres});
+        .update({
+          'llibres': FieldValue.arrayRemove([
+            idLlibre,
+          ]), // Forma atómica y segura de borrar
+        });
   }
 
   @override
@@ -91,9 +92,6 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
     final usuariActual = getUsuariById(currentUser ?? "");
     final reservesUsuari = llistaReservesGlobal
         .where((r) => usuariActual?.reserves.contains(r.id) ?? false)
-        .toList();
-    final llistesUsuari = llistesPersonalitzadesGlobals
-        .where((l) => l.usuaris.contains(currentUser))
         .toList();
 
     return DefaultTabController(
@@ -131,7 +129,7 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
               onDelete: (id) => _eliminarDeLlistaUsuari('pendents', id),
             ),
             // Vista 4: Llistes Personalitzades
-            _buildVistaLlistes(llistesUsuari),
+            _buildVistaLlistes(),
           ],
         ),
         floatingActionButton: FloatingActionButton(
@@ -178,121 +176,355 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
     );
   }
 
-  Widget _buildVistaLlistes(List<LlistaPersonalitzada> llistes) {
-    if (llistes.isEmpty)
-      return const Center(child: Text('No has creat cap llista'));
+  Widget _buildVistaLlistes() {
+    return StreamBuilder<QuerySnapshot>(
+      // Escuchamos solo las listas donde el usuario actual es miembro
+      stream: FirebaseFirestore.instance
+          .collection('llistes_personalitzades')
+          .where('usuaris', arrayContains: currentUser)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError)
+          return const Center(child: Text('Error al carregar'));
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(10),
-      itemCount: llistes.length,
-      itemBuilder: (context, index) {
-        final llista = llistes[index];
-        return Card(
-          child: ExpansionTile(
-            title: Text(llista.nom),
-            subtitle: Text('${llista.llibres.length} llibres'),
-            children: llista.llibres.map((id) {
-              final llibre = getLlibreById(id);
-              return ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child:
-                      llibre?.urlImatge != null && llibre!.urlImatge!.isNotEmpty
-                      ? Image.network(
-                          llibre.urlImatge!,
-                          width: 30,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            width: 30,
-                            height: 50,
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.book, size: 20),
-                          ),
-                        )
-                      : Container(
-                          width: 40,
-                          height: 60,
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.book, size: 20),
-                        ),
+        final docs = snapshot.data!.docs;
+        if (docs.isEmpty)
+          return const Center(child: Text('No has creat cap llista'));
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(10),
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            // Convertimos el documento de Firebase a nuestro objeto de clase
+            final llista = LlistaPersonalitzada.fromJson(
+              docs[index].data() as Map<String, dynamic>,
+            );
+
+            return Card(
+              child: ExpansionTile(
+                title: Text(llista.nom),
+                subtitle: Text('${llista.llibres.length} llibres'),
+                trailing: Wrap(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.person_add_alt_1, size: 20),
+                      onPressed: () => _gestionarUsuarisLlista(context, llista),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.exit_to_app,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      onPressed: () => _confirmarSortirLlista(context, llista),
+                    ),
+                    const Icon(Icons.expand_more),
+                  ],
                 ),
-                title: Text(llibre!.titol),
-                trailing: IconButton(
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () => _eliminarDeLlistaPersonalitzada(llista, id),
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PantallaLlibre(llibre: llibre),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
+                children: llista.llibres.map((id) {
+                  final llibre = getLlibreById(id);
+                  if (llibre == null) return const SizedBox.shrink();
+                  return ListTile(
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child:
+                          llibre.urlImatge != null &&
+                              llibre.urlImatge!.isNotEmpty
+                          ? Image.network(
+                              llibre.urlImatge!,
+                              width: 30,
+                              height: 50,
+                              fit: BoxFit.cover,
+                            )
+                          : const Icon(Icons.book),
+                    ),
+                    title: Text(llibre.titol),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      onPressed: () =>
+                          _eliminarDeLlistaPersonalitzada(llista, id),
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PantallaLlibre(llibre: llibre),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            );
+          },
         );
       },
     );
   }
+  // --- NUEVAS FUNCIONES DE LÓGICA ---
 
-  // Modal para crear una nueva lista en Firebase
+  void _gestionarUsuarisLlista(
+    BuildContext context,
+    LlistaPersonalitzada llista,
+  ) {
+    String filtreCerca = "";
+    // Empezamos con los usuarios que ya están en la lista (excepto yo)
+    List<String> seleccionats = List.from(llista.usuaris)..remove(currentUser);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Gestionar Usuaris: ${llista.nom}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextField(
+                decoration: const InputDecoration(hintText: 'Cerca amics...'),
+                onChanged: (val) =>
+                    setModalState(() => filtreCerca = val.toLowerCase()),
+              ),
+              SizedBox(
+                height: 200,
+                child: ListView(
+                  children: llistaUsuarisGlobal
+                      .where((u) {
+                        bool esAmic =
+                            u.seguidors.contains(currentUser) &&
+                            u.seguint.contains(currentUser);
+                        return esAmic &&
+                            u.nom.toLowerCase().contains(filtreCerca) &&
+                            u.id != currentUser;
+                      })
+                      .map((amic) {
+                        return CheckboxListTile(
+                          title: Text(amic.nom),
+                          value: seleccionats.contains(amic.id),
+                          onChanged: (val) {
+                            setModalState(() {
+                              if (val == true)
+                                seleccionats.add(amic.id);
+                              else
+                                seleccionats.remove(amic.id);
+                            });
+                          },
+                        );
+                      })
+                      .toList(),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  List<String> novaLlistaUsuaris = [
+                    currentUser!,
+                    ...seleccionats,
+                  ];
+                  await FirebaseFirestore.instance
+                      .collection('llistes_personalitzades')
+                      .doc(llista.id)
+                      .update({'usuaris': novaLlistaUsuaris});
+
+                  setState(() => llista.setUsuaris(novaLlistaUsuaris));
+                  Navigator.pop(context);
+                },
+                child: const Text('Actualitzar'),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmarSortirLlista(
+    BuildContext context,
+    LlistaPersonalitzada llista,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sortir de la llista'),
+        content: Text(
+          'Segur que vols deixar de formar part de "${llista.nom}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel·lar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final docRef = FirebaseFirestore.instance
+                  .collection('llistes_personalitzades')
+                  .doc(llista.id);
+
+              if (llista.usuaris.length <= 1) {
+                await docRef.delete();
+              } else {
+                await docRef.update({
+                  'usuaris': FieldValue.arrayRemove([currentUser]),
+                });
+              }
+              Navigator.pop(
+                context,
+              ); // El StreamBuilder se encargará de quitarlo de la pantalla
+            },
+            child: const Text('Sortir', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _mostrarOpcionsAfegir(BuildContext context) {
     final TextEditingController _nomController = TextEditingController();
+    // Lista temporal para guardar los IDs de los amigos seleccionados
+    List<String> amicsSeleccionats = [];
+    String filtreCerca = "";
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 20,
-          right: 20,
-          top: 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Nova Llista Personalitzada',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: _nomController,
-              decoration: const InputDecoration(
-                labelText: 'Nom de la llista',
-                border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        // Necesario para actualizar la lista de amigos dentro del modal
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Nova Llista Personalitzada',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (_nomController.text.isEmpty || currentUser == null)
-                    return;
-                  final docRef = FirebaseFirestore.instance
-                      .collection('llistes_personalitzades')
-                      .doc();
-                  final nova = LlistaPersonalitzada(
-                    id: docRef.id,
-                    nom: _nomController.text,
-                    llibres: [],
-                    usuaris: [currentUser!],
-                  );
-                  await docRef.set(nova.toJson());
-                  setState(() => llistesPersonalitzadesGlobals.add(nova));
-                  Navigator.pop(context);
-                },
-                child: const Text('Crear Llista'),
+              const SizedBox(height: 15),
+              TextField(
+                controller: _nomController,
+                decoration: const InputDecoration(
+                  labelText: 'Nom de la llista',
+                  border: OutlineInputBorder(),
+                ),
+                autofocus: true,
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 20),
+
+              // SECCIÓN DE AMIGOS
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Compartir amb amics:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                decoration: const InputDecoration(
+                  hintText: 'Cerca amic per nom...',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (val) =>
+                    setModalState(() => filtreCerca = val.toLowerCase()),
+              ),
+              const SizedBox(height: 10),
+
+              // Lista de amigos (filtrada)
+              SizedBox(
+                height: 150,
+                child: ListView(
+                  children: llistaUsuarisGlobal
+                      .where((u) {
+                        // Lógica de "Amigo": Me sigue, lo sigo y coincide con la búsqueda
+                        bool esAmic =
+                            currentUser != null &&
+                            u.seguidors.contains(currentUser) &&
+                            u.seguint.contains(
+                              currentUser,
+                            ); // Ajusta según tu modelo
+                        bool coincideNom = u.nom.toLowerCase().contains(
+                          filtreCerca,
+                        );
+                        return esAmic && coincideNom && u.id != currentUser;
+                      })
+                      .map((amic) {
+                        final estaSeleccionat = amicsSeleccionats.contains(
+                          amic.id,
+                        );
+                        return CheckboxListTile(
+                          title: Text(amic.nom),
+                          secondary: CircleAvatar(
+                            backgroundImage: NetworkImage(amic.fotoUrl ?? ''),
+                          ),
+                          value: estaSeleccionat,
+                          onChanged: (bool? value) {
+                            setModalState(() {
+                              if (value == true)
+                                amicsSeleccionats.add(amic.id);
+                              else
+                                amicsSeleccionats.remove(amic.id);
+                            });
+                          },
+                        );
+                      })
+                      .toList(),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (_nomController.text.isEmpty || currentUser == null)
+                      return;
+
+                    final docRef = FirebaseFirestore.instance
+                        .collection('llistes_personalitzades')
+                        .doc();
+
+                    // Creamos la lista incluyendo al creador + amigos seleccionados
+                    final llistaUsuarisFinal = [
+                      currentUser!,
+                      ...amicsSeleccionats,
+                    ];
+
+                    final nova = LlistaPersonalitzada(
+                      id: docRef.id,
+                      nom: _nomController.text,
+                      llibres: [],
+                      usuaris: llistaUsuarisFinal, // Se guarda para todos
+                    );
+
+                    await docRef.set(nova.toJson());
+
+                    setState(() => llistesPersonalitzadesGlobals.add(nova));
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Crear Llista'),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

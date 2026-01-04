@@ -18,6 +18,10 @@ class LlistaPersonalitzada {
   List<String> get llibres => _llibres;
   List<String> get usuaris => _usuaris;
 
+  void setUsuaris(List<String> usuarisNou) {
+    _usuaris = usuarisNou;
+  }
+
   int get numLlibres => _llibres.length;
 
   LlistaPersonalitzada.fromJson(Map<String, dynamic> json)

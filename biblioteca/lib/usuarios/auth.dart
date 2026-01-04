@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../clases/usuari.dart';
+import '../clases/carregaDeHistorial.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final GoogleSignIn _googleSignIn = GoogleSignIn();
@@ -109,6 +110,7 @@ Future<User?> signInWithGoogle() async {
 }
 
 Future<void> signOut() async {
+  historialActivitat.clear();
   await _googleSignIn.signOut();
   await _auth.signOut();
 }

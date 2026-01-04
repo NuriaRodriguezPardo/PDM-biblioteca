@@ -101,11 +101,18 @@ class _PantallaUsuariState extends State<PantallaUsuari>
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
-              await signOut();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const PantallaLogin()),
-              );
+              await signOut(); // Llama a la función que ahora limpia el historial
+
+              if (context.mounted) {
+                // Usamos pushAndRemoveUntil para limpiar el stack de pantallas
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PantallaLogin(),
+                  ),
+                  (route) => false,
+                );
+              }
             },
           ),
         ],
