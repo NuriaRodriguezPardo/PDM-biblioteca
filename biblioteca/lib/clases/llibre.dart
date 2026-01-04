@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'valoracio.dart';
 
 class Llibre {
   final String id;
@@ -9,7 +10,7 @@ class Llibre {
   List<String> _playlist;
   int _stock;
   final String? urlImatge;
-  List<String> _valoracions;
+  List<ValoracioId> _valoracions;
 
   Llibre({
     required this.id,
@@ -19,7 +20,7 @@ class Llibre {
     required List<String> playlist,
     required this.tags,
     required int stock,
-    required List<String> valoracions,
+    required List<ValoracioId> valoracions,
     this.urlImatge,
   }) : _playlist = playlist,
        _stock = stock,
@@ -29,29 +30,33 @@ class Llibre {
     // Extraemos el mapa de datos del documento
     final data = doc.data() as Map<String, dynamic>? ?? {};
 
-    List<String> segura(dynamic camp) {
-      if (camp is List) return List<String>.from(camp);
-      if (camp is String && camp.isNotEmpty) return [camp];
+    List<ValoracioId> llegirValoracions(dynamic camp) {
+      if (camp is List) {
+        return camp
+            .map((vString) => ValoracioId.fromString(vString.toString()))
+            .toList();
+      }
       return [];
     }
 
     return Llibre(
-      // Usamos doc.id para asegurar que el ID sea el nombre del documento en Firebase
       id: doc.id,
       titol: data['titulo'] ?? '',
       autor: data['autor'] ?? '',
       idioma: data['idioma'] ?? '',
-      playlist: segura(data['playlist']),
-      tags: segura(data['tags'] ?? []),
+      playlist: (data['playlist'] as List?)?.cast<String>() ?? [],
+      tags: (data['tags'] as List?)?.cast<String>() ?? [],
       stock: data['stock'] ?? 0,
-      valoracions: segura(data['valoraciones'] ?? []),
-      urlImatge: data['url'] ?? null,
+      valoracions: llegirValoracions(
+        data['valoraciones'],
+      ), // Ahora crea objetos ValoracioId
+      urlImatge: data['url'],
     );
   }
 
   int get stock => _stock;
   List<String> get playlist => _playlist;
-  List<String> get valoracions => _valoracions;
+  List<ValoracioId> get valoracions => _valoracions;
   bool disponible() => _stock > 0;
 
   void augmentarStock(int num) {

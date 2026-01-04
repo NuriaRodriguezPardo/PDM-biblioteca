@@ -1,11 +1,17 @@
 import 'clases/canço.dart'; // Asegúrate de que la ruta sea correcta
 import 'clases/llibre.dart';
 import 'clases/usuari.dart';
+import 'clases/reserva.dart';
+import 'clases/valoracio.dart';
+import 'clases/llista_personalitzada.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 List<Llibre> llistaLlibresGlobal = [];
 List<Canco> llistaCanconsGlobal = [];
 List<Usuari> llistaUsuarisGlobal = [];
+List<Reserva> llistaReservesGlobal = [];
+List<Valoracio> llistaValoracionsGlobal = [];
+List<LlistaPersonalitzada> llistesPersonalitzadesGlobals = [];
 
 // 1. Definimos la referencia a la colección fuera de las funciones para reutilizarla.
 final coleccionLibros = FirebaseFirestore.instance
@@ -19,7 +25,9 @@ final coleccionLibros = FirebaseFirestore.instance
         'idioma': llibre.idioma,
         'tags': llibre.tags,
         'playlist': llibre.playlist,
-        'valoraciones': llibre.valoracions,
+        'valoraciones': llibre.valoracions
+            .map((vId) => vId.toString())
+            .toList(),
         'url': llibre.urlImatge,
       },
     );
@@ -45,7 +53,6 @@ final coleccionUsuaris = FirebaseFirestore.instance
     .withConverter<Usuari>(
       fromFirestore: (snapshot, _) => Usuari.fromJson(snapshot.data()!),
       toFirestore: (usuari, _) => {
-        'uid': usuari.id,
         'nom': usuari.nom,
         'email': usuari.email,
         'fotoUrl': usuari.fotoUrl,
@@ -55,6 +62,42 @@ final coleccionUsuaris = FirebaseFirestore.instance
         'reserves': usuari.reserves,
         'seguidors': usuari.seguidors,
         'amics': usuari.amics,
+      },
+    );
+
+final coleccionReserves = FirebaseFirestore.instance
+    .collection('reserves')
+    .withConverter<Reserva>(
+      fromFirestore: (snapshot, _) => Reserva.fromJson(snapshot.data()!),
+      toFirestore: (reserva, _) => {
+        'llibre': reserva.llibre,
+        'data_reserva': reserva.dataReserva.toIso8601String(),
+        'data_venciment': reserva.dataVenciment.toIso8601String(),
+      },
+    );
+
+final coleccionValoracions = FirebaseFirestore.instance
+    .collection('valoracions')
+    .withConverter<Valoracio>(
+      fromFirestore: (snapshot, _) => Valoracio.fromJson(snapshot.data()!),
+      toFirestore: (valoracio, _) => {
+        'usuari': valoracio.idUsuari,
+        'llibre': valoracio.idLlibre,
+        'puntuacio': valoracio.puntuacio,
+        'review': valoracio.review,
+        'data': valoracio.data.toIso8601String(),
+      },
+    );
+
+final coleccionLlistes = FirebaseFirestore.instance
+    .collection('llistes_personalitzades')
+    .withConverter<LlistaPersonalitzada>(
+      fromFirestore: (snapshot, _) =>
+          LlistaPersonalitzada.fromJson(snapshot.data()!),
+      toFirestore: (llista, _) => {
+        'nom': llista.nom,
+        'llibres': llista.llibres,
+        'usuaris': llista.usuaris,
       },
     );
 
@@ -68,6 +111,19 @@ Future<void> inicialitzarDadesGlobals() async {
 
     final queryUsuaris = await coleccionUsuaris.get();
     llistaUsuarisGlobal = queryUsuaris.docs.map((doc) => doc.data()).toList();
+
+    final queryReserves = await coleccionReserves.get();
+    llistaReservesGlobal = queryReserves.docs.map((doc) => doc.data()).toList();
+
+    final queryValoracions = await coleccionValoracions.get();
+    llistaValoracionsGlobal = queryValoracions.docs
+        .map((doc) => doc.data())
+        .toList();
+
+    final queryLlistes = await coleccionLlistes.get();
+    llistesPersonalitzadesGlobals = queryLlistes.docs
+        .map((doc) => doc.data())
+        .toList();
   } catch (e) {
     print("Error cargando datos globales: $e");
   }
@@ -98,4 +154,25 @@ Usuari? getUsuariById(String id) {
   } catch (e) {
     return null;
   }
+}
+
+Reserva? getReservaById(String id) {
+  return llistaReservesGlobal.cast<Reserva?>().firstWhere(
+    (r) => r?.id == id,
+    orElse: () => null,
+  );
+}
+
+Valoracio? getValoracioByCriterio(String idUsuari, String idLlibre) {
+  return llistaValoracionsGlobal.cast<Valoracio?>().firstWhere(
+    (v) => v?.idUsuari == idUsuari && v?.idLlibre == idLlibre,
+    orElse: () => null,
+  );
+}
+
+LlistaPersonalitzada? getLlistaById(String id) {
+  return llistesPersonalitzadesGlobals.cast<LlistaPersonalitzada?>().firstWhere(
+    (l) => l?.id == id,
+    orElse: () => null,
+  );
 }

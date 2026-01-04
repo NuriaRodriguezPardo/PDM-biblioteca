@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Solo añadimos esto
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../clases/llibre.dart';
 import '../clases/canço.dart';
 import '../clases/valoracio.dart';
@@ -26,18 +27,40 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
   final AudioPlayer _audioplayer = AudioPlayer();
   String? _cancoActual;
   bool isPlaying = false;
-
-  // Accedemos al usuario de Firebase para saber quién es
-  final User? currentUser = FirebaseAuth.instance.currentUser;
+  final String? currentUser = FirebaseAuth.instance.currentUser?.uid;
+  final TextEditingController _reviewController = TextEditingController();
+  double _novaPuntuacio = 5.0; // Puntuación por defecto
 
   @override
   void initState() {
     super.initState();
-    // Comprovar si ja està reservat (Mantenemos tu lógica original)
-    jaReservat = reserves.any((r) => r.llibre == widget.llibre.id);
+    _comprovarReservaUsuari();
   }
 
-  // --- MANTENEMOS TUS FUNCIONES ORIGINALES TAL CUAL ---
+  // Getter que filtra automáticamente las valoraciones de la lista global
+  List<ValoracioId> get valoracionsFiltrades {
+    return llistaValoracionsGlobal
+        .where((v) => v.idLlibre == widget.llibre.id)
+        .map(
+          (v) => v.id,
+        ) // Obtenemos el objeto ValoracioId (idUsuari + idLlibre)
+        .toList();
+  }
+
+  // Lògica per saber si l'usuari actual té aquest llibre reservat
+  void _comprovarReservaUsuari() {
+    if (currentUser != null) {
+      final usuariActual = getUsuariById(currentUser!);
+      if (usuariActual != null) {
+        // Busquem si alguna de les reserves de l'usuari apunta a aquest llibre
+        jaReservat = llistaReservesGlobal.any(
+          (r) =>
+              usuariActual.reserves.contains(r.id) &&
+              r.llibre == widget.llibre.id,
+        );
+      }
+    }
+  }
 
   List<Widget> _buildStars(double puntuacio) {
     int fullStars = puntuacio.floor();
@@ -56,103 +79,284 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
     return stars;
   }
 
-  Valoracio _getValoracioSimulada(String idRef) {
-    return Valoracio(
-      puntuacio: 4.5,
-      review: "Aquesta és una ressenya simulada per a la referència $idRef.",
-      idUsuari:
-          currentUser?.displayName ??
-          "Usuari", // Cambiamos esto por el nombre real de Firebase
-      idLlibre: widget.llibre.id,
+  Widget _buildFormulariValoracio() {
+    if (currentUser == null) return const SizedBox.shrink();
+
+    return Card(
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(
+        vertical: 15,
+      ), // Reducido un poco el margen
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: 12.0,
+        ), // Padding ajustado
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Escriu la teva ressenya",
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+              ), // Fuente un punto más pequeña
+            ),
+
+            // Selector de Estrellas
+            Row(
+              children: List.generate(5, (index) {
+                return IconButton(
+                  constraints:
+                      const BoxConstraints(), // Reduce espacio extra del botón
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 4,
+                  ),
+                  icon: Icon(
+                    index < _novaPuntuacio ? Icons.star : Icons.star_border,
+                    color: Colors.amber,
+                    size: 24,
+                  ),
+                  onPressed: () => setState(() => _novaPuntuacio = index + 1.0),
+                );
+              }),
+            ),
+
+            TextField(
+              controller: _reviewController,
+              decoration: const InputDecoration(
+                hintText: "Què t'ha semblat aquest llibre? (Màx. 80 paraules)",
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.all(10), // Caja más compacta
+              ),
+              maxLines: 2, // Caja un punto más pequeña (de 3 a 2 líneas)
+            ),
+
+            const SizedBox(height: 10),
+
+            ElevatedButton(
+              onPressed: () {
+                // Lógica de validación de 80 palabras
+                int numParaules = _reviewController.text
+                    .trim()
+                    .split(RegExp(r'\s+'))
+                    .length;
+
+                if (_reviewController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("La ressenya no pot estar buida"),
+                    ),
+                  );
+                } else if (numParaules > 80) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "Has superat el límit: $numParaules/80 paraules",
+                      ),
+                    ),
+                  );
+                } else {
+                  _enviarValoracio();
+                  // Limpieza del formulario tras el envío
+                  setState(() {
+                    _reviewController.clear();
+                    _novaPuntuacio = 5.0;
+                  });
+                }
+              },
+              child: const Text("Publicar ressenya"),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  bool _estaAPendents() => llibresPendents.any((l) => l.id == widget.llibre.id);
-  bool _estaALlegits() => llibresLlegits.any((l) => l.id == widget.llibre.id);
+  void _enviarValoracio() async {
+    if (currentUser == null || _reviewController.text.isEmpty) return;
+
+    final nuevoId = ValoracioId(
+      idUsuari: currentUser!,
+      idLlibre: widget.llibre.id,
+    );
+
+    final nuevaVal = Valoracio(
+      puntuacio: _novaPuntuacio,
+      review: _reviewController.text,
+      idUsuari: currentUser!,
+      idLlibre: widget.llibre.id,
+    );
+
+    setState(() {
+      // 1. Añadir a la lista local del libro si no existe
+      if (!widget.llibre.valoracions.contains(nuevoId)) {
+        widget.llibre.valoracions.add(nuevoId);
+      }
+
+      // 2. Actualizar lista global para refresco inmediato
+      int idx = llistaValoracionsGlobal.indexWhere((v) => v.id == nuevoId);
+      if (idx != -1) {
+        llistaValoracionsGlobal[idx] = nuevaVal;
+      } else {
+        llistaValoracionsGlobal.add(nuevaVal);
+      }
+    });
+
+    // 3. Guardar la valoración en su propia colección
+    await FirebaseFirestore.instance
+        .collection('valoracions')
+        .doc(nuevoId.toString())
+        .set(nuevaVal.toJson());
+
+    // 4. ACTUALIZAR EL LIBRO EN FIREBASE con la nueva lista de IDs
+    await FirebaseFirestore.instance
+        .collection('libros')
+        .doc(widget.llibre.id)
+        .update({
+          'valoraciones': widget.llibre.valoracions
+              .map((v) => v.toString())
+              .toList(),
+        });
+
+    _reviewController.clear();
+  }
+
+  bool _estaAPendents() {
+    final usuari = getUsuariById(currentUser ?? "");
+    return usuari?.pendents.contains(widget.llibre.id) ?? false;
+  }
+
+  bool _estaALlegits() {
+    final usuari = getUsuariById(currentUser ?? "");
+    return usuari?.llegits.contains(widget.llibre.id) ?? false;
+  }
 
   void _afegirAPendents() {
-    if (_estaAPendents()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Ja a pendents'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
+    if (_estaAPendents()) return;
+    final usuari = getUsuariById(currentUser ?? "");
+    if (usuari != null) {
+      setState(() {
+        usuari.pendents.add(widget.llibre.id);
+      });
+      // Sincronizar con Firebase
+      FirebaseFirestore.instance.collection('usuaris').doc(currentUser).update({
+        'pendents': usuari.pendents,
+      });
     }
-    setState(() {
-      llibresPendents.add(widget.llibre);
-    });
-    registrarActivitat(
-      "Afegit a Pendents",
-      "Llibre: ${widget.llibre.titol}",
-      Icons.bookmark_add,
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Afegit a pendents'),
-        backgroundColor: Colors.green,
-      ),
-    );
   }
 
   void _marcarComLlegit() {
-    if (_estaALlegits()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Ja llegit'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
+    if (_estaALlegits()) return;
+    final usuari = getUsuariById(currentUser ?? "");
+    if (usuari != null) {
+      setState(() {
+        usuari.llegits.add(widget.llibre.id);
+        usuari.pendents.remove(widget.llibre.id);
+      });
+      // Sincronizar ambos campos en Firebase
+      FirebaseFirestore.instance.collection('usuaris').doc(currentUser).update({
+        'llegits': usuari.llegits,
+        'pendents': usuari.pendents,
+      });
     }
-    setState(() {
-      llibresLlegits.add(widget.llibre);
-      llibresPendents.removeWhere((l) => l.id == widget.llibre.id);
-    });
-    registrarActivitat(
-      "Llibre llegit",
-      "Has llegit '${widget.llibre.titol}'.",
-      Icons.check_circle,
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Marcat com a llegit!'),
-        backgroundColor: Colors.green,
-      ),
+  }
+
+  Widget _buildSeccioValoracions() {
+    // Ahora usamos directamente la lista que tiene el objeto llibre
+    final valoracionsDelLlibre = widget.llibre.valoracions;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Valoracions (${valoracionsDelLlibre.length}):',
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        ...valoracionsDelLlibre.map((vId) {
+          // Buscamos el contenido de la valoración en la lista global cargada
+          final valoracio = llistaValoracionsGlobal.firstWhere(
+            (v) => v.id == vId,
+            orElse: () =>
+                Valoracio(puntuacio: 0, review: '', idUsuari: '', idLlibre: ''),
+          );
+
+          if (valoracio.idUsuari.isEmpty) return const SizedBox.shrink();
+
+          final autor = getUsuariById(valoracio.idUsuari);
+
+          return Card(
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundImage: (autor?.fotoUrl != null)
+                    ? NetworkImage(autor!.fotoUrl!)
+                    : null,
+                child: (autor?.fotoUrl == null)
+                    ? const Icon(Icons.person)
+                    : null,
+              ),
+              title: Text(autor?.nom ?? "Usuari desconegut"),
+              subtitle: Text(valoracio.review),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: _buildStars(valoracio.puntuacio),
+              ),
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 
-  void _ferReserva() {
+  void _ferReserva() async {
+    // Añadimos async
     bool exito = reservarLlibreGlobal(widget.llibre.id);
-    if (exito) {
+    final user = currentUser;
+
+    if (exito && user != null) {
+      final docRef = FirebaseFirestore.instance.collection('reserves').doc();
+      final String idFirebase = docRef.id;
+
       final novaReserva = Reserva(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: idFirebase,
         llibre: widget.llibre.id,
         dataReserva: DateTime.now(),
         dataVenciment: DateTime.now().add(const Duration(days: 30)),
       );
+
+      // 1. Guardar el objeto Reserva en Firebase
+      await FirebaseFirestore.instance
+          .collection('reserves')
+          .doc(idFirebase)
+          .set(novaReserva.toJson());
+
       setState(() {
         jaReservat = true;
-        reserves.add(novaReserva);
+        llistaReservesGlobal.add(novaReserva);
+        final usuariActual = getUsuariById(user);
+        if (usuariActual != null) {
+          usuariActual.reserves.add(idFirebase);
+
+          // 2. Actualizar el documento del Usuario con la nueva ID de reserva
+          FirebaseFirestore.instance.collection('usuaris').doc(user).update({
+            'reserves': usuariActual.reserves,
+          });
+        }
+
+        // 3. Actualizar el Stock del libro en Firebase
+        FirebaseFirestore.instance
+            .collection('libros')
+            .doc(widget.llibre.id)
+            .update({'stock': widget.llibre.stock});
       });
+
       registrarActivitat(
         "Reserva realitzada",
         "Reservat: ${widget.llibre.titol}",
         Icons.bookmark_added,
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Reserva confirmada'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sense stock'),
-          backgroundColor: Colors.red,
-        ),
       );
     }
   }
@@ -276,23 +480,10 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
               ],
             ),
             const SizedBox(height: 30),
-            Text(
-              'Valoracions (${llibre.valoracions.length}):',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            ...llibre.valoracions.map((id) {
-              final val = _getValoracioSimulada(id);
-              return Card(
-                child: ListTile(
-                  title: Text(val.idUsuari),
-                  subtitle: Text(val.review),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: _buildStars(val.puntuacio),
-                  ),
-                ),
-              );
-            }).toList(),
+            _buildFormulariValoracio(), // <--- Tu nueva sección aquí
+            const SizedBox(height: 20),
+            _buildSeccioValoracions(), // La lista de valoraciones existentes
+
             const SizedBox(height: 30),
             const Text(
               'Playlist associada',
@@ -371,24 +562,43 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
   }
 
   void _mostrarSeleccioLlista(BuildContext context) {
-    if (llistesPersonalitzades.isEmpty) return;
+    // Solo mostramos las listas donde el usuario actual es miembro
+    final llistesUsuari = llistesPersonalitzadesGlobals
+        .where((l) => l.usuaris.contains(currentUser))
+        .toList();
+
+    if (llistesUsuari.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No tens llistes creades')));
+      return;
+    }
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Afegir a llista:'),
+        title: const Text('Afegir a llista:'),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: llistesPersonalitzades.length,
+            itemCount: llistesUsuari.length,
             itemBuilder: (context, index) {
-              final llista = llistesPersonalitzades[index];
+              final llista = llistesUsuari[index];
               return ListTile(
                 title: Text(llista.nom),
-                onTap: () {
+                onTap: () async {
                   setState(() {
-                    llista.llibres.add(widget.llibre.id);
+                    if (!llista.llibres.contains(widget.llibre.id)) {
+                      llista.llibres.add(widget.llibre.id);
+                    }
                   });
+                  // Sincronizar la lista personalizada en Firebase
+                  await FirebaseFirestore.instance
+                      .collection('llistes_personalitzades')
+                      .doc(
+                        llista.id,
+                      ) // Asegúrate que tu clase LlistaPersonalitzada tenga el campo id
+                      .update({'llibres': llista.llibres});
                   Navigator.pop(context);
                 },
               );
