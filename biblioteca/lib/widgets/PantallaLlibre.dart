@@ -5,7 +5,6 @@ import '../clases/llibre.dart';
 import '../clases/canço.dart';
 import '../clases/valoracio.dart';
 import '../clases/reserva.dart';
-import '../carregaDeDades.dart';
 import '../clases/carregaDeHistorial.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../InternalLists.dart';
@@ -358,6 +357,22 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
         "Reservat: ${widget.llibre.titol}",
         Icons.bookmark_added,
       );
+    }
+  }
+
+  bool reservarLlibreGlobal(String idLlibre) {
+    try {
+      // 1. Busquem el llibre "real" dins la llista global 'totsElsLlibres'
+      final llibre = llistaLlibresGlobal.firstWhere((l) => l.id == idLlibre);
+
+      // 2. Intentem disminuir l'stock usant el mètode de la classe Llibre
+      // (El mètode disminuirStock ja controla si stock > 0)
+      bool resultat = llibre.disminuirStock(1);
+
+      return resultat;
+    } catch (e) {
+      // Si no troba el llibre o passa algo raro
+      return false;
     }
   }
 

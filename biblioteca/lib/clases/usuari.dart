@@ -10,7 +10,7 @@ class Usuari {
   List<String> llegits;
   List<String> reserves;
   List<String> seguidors;
-  List<String> amics;
+  List<String> seguint;
 
   Usuari({
     required this.id,
@@ -22,13 +22,13 @@ class Usuari {
     List<String>? llegits,
     List<String>? reserves,
     List<String>? seguidors,
-    List<String>? amics,
+    List<String>? seguint,
   }) : tags = tags ?? [],
        pendents = pendents ?? [],
        llegits = llegits ?? [],
        reserves = reserves ?? [],
        seguidors = seguidors ?? [],
-       amics = amics ?? [];
+       seguint = seguint ?? [];
 
   // Constructor JSON robusto: Evita el error de Pigeon forzando el tipo String
   Usuari.fromJson(Map<String, dynamic> json)
@@ -63,8 +63,8 @@ class Usuari {
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      amics =
-          (json['amics'] as List<dynamic>?)
+      seguint =
+          (json['seguint'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [];
@@ -81,7 +81,7 @@ class Usuari {
       'llegits': llegits,
       'reserves': reserves,
       'seguidors': seguidors,
-      'amics': amics,
+      'seguint': seguint,
     };
   }
 }

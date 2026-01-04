@@ -194,6 +194,29 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
             children: llista.llibres.map((id) {
               final llibre = getLlibreById(id);
               return ListTile(
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child:
+                      llibre?.urlImatge != null && llibre!.urlImatge!.isNotEmpty
+                      ? Image.network(
+                          llibre.urlImatge!,
+                          width: 30,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 30,
+                            height: 50,
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.book, size: 20),
+                          ),
+                        )
+                      : Container(
+                          width: 40,
+                          height: 60,
+                          color: Colors.grey[200],
+                          child: const Icon(Icons.book, size: 20),
+                        ),
+                ),
                 title: Text(llibre!.titol),
                 trailing: IconButton(
                   icon: const Icon(Icons.remove_circle_outline),

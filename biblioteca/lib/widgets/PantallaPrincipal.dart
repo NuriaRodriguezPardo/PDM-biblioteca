@@ -1,11 +1,14 @@
+import 'package:biblioteca/clases/usuari.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // IMPORTANTE: Para gestionar el estado de la sesión
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../clases/llibre.dart';
 import 'PantallaLlibre.dart';
 import 'PantallaMatch.dart';
 import 'pantallaBiblioteca.dart';
 import 'PantallaBusqueda.dart';
 import 'PantallaUsuari.dart';
+import 'PantallaLogin.dart';
 import '../InternalLists.dart';
 import '../usuarios/auth.dart'; // IMPORTANTE: Para la función de cierre de sesión
 
@@ -21,13 +24,17 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
   late List<Llibre> novedades;
   late List<Llibre> populares;
 
-  // Obtenemos el usuario actual de Firebase para mostrar sus datos reales
-  final User? user = FirebaseAuth.instance.currentUser;
+  User? user;
+  Usuari? usuari;
 
   @override
   void initState() {
     super.initState();
     _generarListasAleatorias(); // Mantenemos tu lógica de aleatoriedad original
+    user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      usuari = getUsuariById(user!.uid);
+    }
   }
 
   void _generarListasAleatorias() {
@@ -75,71 +82,99 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            UserAccountsDrawerHeader(
-              decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-              accountName: const Text(
-                'Menú Biblioteca',
-                style: TextStyle(fontSize: 20),
-              ),
-              // Mostramos el email real del usuario de Firebase
-              accountEmail: Text(user?.email ?? 'usuari@email.com'),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(
-                  Icons.person,
-                  size: 45,
-                  color: Theme.of(context).primaryColor,
+
+      drawer: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('usuaris')
+            .doc(user?.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          // Extraemos los datos actualizados de Firebase
+          Map<String, dynamic>? data =
+              snapshot.data?.data() as Map<String, dynamic>?;
+          String? fotoUrlActualizada = data?['fotoUrl'];
+          String? nombreActualizado = data?['nom'] ?? 'Menú Biblioteca';
+
+          return Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: <Widget>[
+                UserAccountsDrawerHeader(
+                  decoration: const BoxDecoration(
+                    color: Color.fromARGB(180, 30, 17, 10),
+                  ),
+                  accountName: Text(
+                    nombreActualizado!,
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                  accountEmail: Text(user?.email ?? 'usuari@email.com'),
+                  currentAccountPicture: CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.white,
+                    // Se actualiza automáticamente mediante el Stream
+                    backgroundImage:
+                        (fotoUrlActualizada != null &&
+                            fotoUrlActualizada.isNotEmpty)
+                        ? NetworkImage(fotoUrlActualizada)
+                        : null,
+                    child:
+                        (fotoUrlActualizada == null ||
+                            fotoUrlActualizada.isEmpty)
+                        ? const Icon(
+                            Icons.person,
+                            size: 45,
+                            color: Color.fromARGB(180, 30, 17, 10),
+                          )
+                        : null,
+                  ),
                 ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.bookmark),
-              title: const Text('La Meva Biblioteca'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BibliotecaScreen(),
+                ListTile(
+                  leading: const Icon(Icons.bookmark),
+                  title: const Text('La Meva Biblioteca'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const BibliotecaScreen(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.shuffle),
+                  title: const Text('Matching Llibre/Cançó'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PantallaMatching(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text(
+                    'Tancar Sessió',
+                    style: TextStyle(color: Colors.red),
                   ),
-                );
-              },
+                  onTap: () async {
+                    await signOut();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PantallaLogin(),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.shuffle),
-              title: const Text('Matching Llibre/Cançó'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    // PantallaMatching ya no requiere usuario estático
-                    builder: (context) => const PantallaMatching(),
-                  ),
-                );
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text(
-                'Tancar Sessió',
-                style: TextStyle(color: Colors.red),
-              ),
-              onTap: () async {
-                await signOut(); // Ejecuta el cierre de sesión en Firebase
-                if (mounted) {
-                  // Redirige a la pantalla de login tras cerrar sesión
-                  Navigator.pushReplacementNamed(context, '/login');
-                }
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

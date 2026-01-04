@@ -1,5 +1,7 @@
+import 'package:biblioteca/widgets/PantallaPerfilUsuari.dart';
 import 'package:flutter/material.dart';
 import '../clases/llibre.dart';
+import '../clases/usuari.dart';
 import 'PantallaLlibre.dart';
 import '../InternalLists.dart';
 
@@ -11,129 +13,174 @@ class PantallaBusqueda extends StatefulWidget {
 }
 
 class _PantallaBusquedaState extends State<PantallaBusqueda> {
-  String query = '';
+  String queryLibros = '';
+  String queryUsuarios = '';
 
-  // CORRECCIÓ: Usem la llista global exportada a carregaDeDades.dart en lloc de cridar la funció de nou.
-  // Això garanteix consistència (mateixa instància d'objectes).
-  final List<Llibre> llibresPerMostrar = llistaLlibresGlobal;
   @override
   Widget build(BuildContext context) {
-    // Definimos la lista de resultados basándonos en si hay búsqueda o no
-    List<Llibre> resultados;
-
-    if (query.isEmpty) {
-      // SI NO HAY BÚSQUEDA: Mostramos solo los 5 primeros (o una muestra aleatoria)
-      // Usamos .take(10) para asegurar que no intentamos coger más de los que hay
-      resultados = llistaLlibresGlobal.take(5).toList();
+    // LÓGICA BÚSQUEDA LIBROS (Tal cual la tenías)
+    List<Llibre> resultadosLibros;
+    if (queryLibros.isEmpty) {
+      resultadosLibros = llistaLlibresGlobal.take(5).toList();
     } else {
-      // SI HAY BÚSQUEDA: Filtramos todos los que coincidan
-      resultados = llistaLlibresGlobal.where((llibre) {
-        final queryLower = query.toLowerCase();
-
-        final tituloMatch = llibre.titol.toLowerCase().contains(queryLower);
-        final autorMatch = llibre.autor.toLowerCase().contains(queryLower);
-        final tagMatch = llibre.tags.any(
-          (tag) => tag.toLowerCase().contains(queryLower),
-        );
-
-        return tituloMatch || autorMatch || tagMatch;
+      resultadosLibros = llistaLlibresGlobal.where((llibre) {
+        final queryLower = queryLibros.toLowerCase();
+        return llibre.titol.toLowerCase().contains(queryLower) ||
+            llibre.autor.toLowerCase().contains(queryLower);
       }).toList();
     }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Buscar llibres')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+    // LÓGICA BÚSQUEDA USUARIOS
+    List<Usuari> resultadosUsuarios;
+    if (queryUsuarios.isEmpty) {
+      resultadosUsuarios = llistaUsuarisGlobal.take(5).toList();
+    } else {
+      resultadosUsuarios = llistaUsuarisGlobal.where((u) {
+        final queryLower = queryUsuarios.toLowerCase();
+        return u.nom.toLowerCase().contains(queryLower) ||
+            u.email!.toLowerCase().contains(queryLower);
+      }).toList();
+    }
+
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Cercar'),
+          centerTitle: true,
+          // Pestañas en horizontal arriba (Estilo Windows/Tabs)
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.book), text: 'Llibres'),
+              Tab(icon: Icon(Icons.people), text: 'Persones'),
+            ],
+          ),
+        ),
+        body: TabBarView(
           children: [
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Buscar per títol, autor o etiqueta...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: query.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => setState(() => query = ''),
-                      )
-                    : null,
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  query = value;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            // Subtítulo informativo opcional
-            if (query.isEmpty)
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    'Suggeriments per a tu:',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+            // --- PESTAÑA 1: LIBROS ---
+            Column(
+              children: [
+                _buildSearchBar(
+                  hint: 'Títol o autor...',
+                  onChanged: (value) => setState(() => queryLibros = value),
                 ),
-              ),
-            Expanded(
-              child: resultados.isNotEmpty
-                  ? ListView.builder(
-                      itemCount: resultados.length,
-                      itemBuilder: (context, index) {
-                        final llibre = resultados[index];
-                        return ListTile(
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: llibre.urlImatge != null
-                                ? Image.network(
-                                    llibre.urlImatge!,
-                                    width: 45,
-                                    height: 70,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(
-                                              Icons.broken_image,
-                                              size: 40,
-                                            ),
-                                  )
-                                : const Icon(Icons.book, size: 40),
-                          ),
-                          title: Text(llibre.titol),
-                          subtitle: Text(llibre.autor),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 14,
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PantallaLlibre(llibre: llibre),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    )
-                  : const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.search_off, size: 64, color: Colors.grey),
-                          SizedBox(height: 10),
-                          Text('No s\'han trobat resultats'),
-                        ],
-                      ),
-                    ),
+                Expanded(child: _buildListaLibros(resultadosLibros)),
+              ],
+            ),
+
+            // --- PESTAÑA 2: PERSONAS ---
+            Column(
+              children: [
+                _buildSearchBar(
+                  hint: 'Nom o correu...',
+                  onChanged: (value) => setState(() => queryUsuarios = value),
+                ),
+                Expanded(child: _buildListaUsuarios(resultadosUsuarios)),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Widget de barra de búsqueda reutilizable
+  Widget _buildSearchBar({
+    required String hint,
+    required Function(String) onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: TextField(
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          hintText: hint,
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(25)),
+          filled: true,
+          fillColor: Colors.grey[100],
+        ),
+      ),
+    );
+  }
+
+  // Vista de Lista de Libros (Mantiene tu estética)
+  Widget _buildListaLibros(List<Llibre> libros) {
+    if (libros.isEmpty) return _buildEmptyState();
+    return ListView.builder(
+      itemCount: libros.length,
+      itemBuilder: (context, index) {
+        final llibre = libros[index];
+        return ListTile(
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: llibre.urlImatge != null
+                ? Image.network(llibre.urlImatge!, width: 40, fit: BoxFit.cover)
+                : const Icon(Icons.book, size: 40),
+          ),
+          title: Text(llibre.titol),
+          subtitle: Text(llibre.autor),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => PantallaLlibre(llibre: llibre)),
+          ),
+        );
+      },
+    );
+  }
+
+  // Vista de Lista de Usuarios (Nueva sección)
+  Widget _buildListaUsuarios(List<Usuari> usuarios) {
+    if (usuarios.isEmpty) return _buildEmptyState();
+    return ListView.builder(
+      itemCount: usuarios.length,
+      itemBuilder: (context, index) {
+        final user = usuarios[index];
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundColor: Colors.blueAccent,
+            // Intentamos cargar la imagen de la red
+            backgroundImage: (user.fotoUrl != null && user.fotoUrl!.isNotEmpty)
+                ? NetworkImage(user.fotoUrl!)
+                : null,
+            // Si no hay imagen (backgroundImage es null), se muestra el child (la inicial)
+            child: (user.fotoUrl == null || user.fotoUrl!.isEmpty)
+                ? Text(
+                    user.nom[0].toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null,
+          ),
+          title: Text(user.nom),
+          subtitle: Text(user.email!),
+          trailing: const Icon(Icons.person_add_alt_1, color: Colors.blue),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PantallaPerfilUsuari(usuari: user),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off, size: 64, color: Colors.grey),
+          SizedBox(height: 10),
+          Text('No s\'han trobat resultats'),
+        ],
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:biblioteca/usuarios/auth.dart';
+import 'package:biblioteca/widgets/PantallaPerfilUsuari.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Necesario para obtener el ID actual
 import '../clases/usuari.dart';
@@ -7,6 +8,7 @@ import 'PantallaLlibre.dart';
 import 'PantallaEditarPerfil.dart';
 import '../clases/carregaDeHistorial.dart';
 import '../InternalLists.dart';
+import 'PantallaLogin.dart';
 
 class PantallaUsuari extends StatefulWidget {
   static String route = '/PantallaUsuaris';
@@ -81,9 +83,6 @@ class _PantallaUsuariState extends State<PantallaUsuari>
     });
   }
 
-  // Borra o ignora _getUsuariById si vas a usar Firebase,
-  // ya no es eficiente buscar en un mapa local si tienes los datos en la nube.
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -100,10 +99,12 @@ class _PantallaUsuariState extends State<PantallaUsuari>
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Configuració de l\'Usuari')),
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () async {
+              await signOut();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const PantallaLogin()),
               );
             },
           ),
@@ -205,12 +206,12 @@ class _PantallaUsuariState extends State<PantallaUsuari>
             _buildEstadistica(
               context,
               'Seguint',
-              _usuariVisualitzat!.amics.length,
+              _usuariVisualitzat!.seguint.length,
               Icons.person_add,
               () => _mostrarLlistaUsuaris(
                 context,
                 'Seguint',
-                _usuariVisualitzat!.amics,
+                _usuariVisualitzat!.seguint,
               ),
             ),
             _buildDivisor(),
@@ -452,7 +453,7 @@ class _PantallaUsuariState extends State<PantallaUsuari>
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) =>
-                                          PantallaUsuari(usuari: usuari),
+                                          PantallaPerfilUsuari(usuari: usuari),
                                     ),
                                   );
                                 },

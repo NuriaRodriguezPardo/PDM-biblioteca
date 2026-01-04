@@ -124,8 +124,7 @@ class _PantallaLoginState extends State<PantallaLogin> {
               const SizedBox(height: 16),
 
               _buildGoogleButton(colorScheme),
-              const SizedBox(height: 16),
-              _buildForgotPassword(colorScheme),
+
               const SizedBox(height: 40),
               _buildRegisterLink(colorScheme),
             ],
@@ -142,13 +141,19 @@ class _PantallaLoginState extends State<PantallaLogin> {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: colorScheme.secondary.withValues(alpha: 0.8),
+            // Si el logo tiene fondo transparente, puedes mantener o quitar el color:
+            // color: colorScheme.secondary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Icon(
-            Icons.book_outlined,
-            size: 40,
-            color: colorScheme.onSecondary,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(
+              15,
+            ), // Para que la imagen respete las esquinas redondeadas
+            child: Image.asset(
+              'assets/logo.png',
+              fit: BoxFit
+                  .contain, // 'contain' asegura que el logo se vea entero sin recortarse
+            ),
           ),
         ),
         const SizedBox(height: 32),
@@ -254,16 +259,6 @@ class _PantallaLoginState extends State<PantallaLogin> {
         style: OutlinedButton.styleFrom(
           side: BorderSide(color: colorScheme.secondary.withValues(alpha: 0.5)),
         ),
-      ),
-    );
-  }
-
-  Widget _buildForgotPassword(ColorScheme colorScheme) {
-    return TextButton(
-      onPressed: () {},
-      child: Text(
-        'Has oblidat la contrasenya?',
-        style: TextStyle(color: colorScheme.secondary),
       ),
     );
   }

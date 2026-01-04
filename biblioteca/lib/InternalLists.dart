@@ -61,7 +61,7 @@ final coleccionUsuaris = FirebaseFirestore.instance
         'llegits': usuari.llegits,
         'reserves': usuari.reserves,
         'seguidors': usuari.seguidors,
-        'amics': usuari.amics,
+        'seguint': usuari.seguint,
       },
     );
 
