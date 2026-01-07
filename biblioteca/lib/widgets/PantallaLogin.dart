@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'PantallaRegistrarse.dart';
 import 'PantallaPrincipal.dart';
 import '/usuarios/auth.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'PantallaEscollirTagsGoogle.dart';
 
 class PantallaLogin extends StatefulWidget {
   static const String route = '/login';
@@ -61,28 +61,25 @@ class _PantallaLoginState extends State<PantallaLogin> {
 
   Future<void> _loginGoogle() async {
     setState(() => _isLoading = true);
-    try {
-      User? user =
-          await signInWithGoogle(); // Llamada a la función de auth.dart
+    final resultado = await signInWithGoogle(); // Recibimos el Map
 
-      print("Usuario recibido: $user");
-
-      // Si el login es exitoso y el widget sigue activo
-      if (user != null && mounted) {
-        // Navegar a la pantalla principal
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const PantallaPrincipal()),
-        );
+    if (mounted) {
+      setState(() => _isLoading = false);
+      if (resultado != null) {
+        if (resultado['esNuevo'] == true) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PantallaSeleccioTags(),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const PantallaPrincipal()),
+          );
+        }
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 

@@ -15,6 +15,7 @@ class PantallaEditarPerfil extends StatefulWidget {
 class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
   late TextEditingController _nomController;
   late TextEditingController _imatgeUrlController; // Controlador para la URL
+  String _busquedaTags = "";
   final List<String> _tagsDisponibles = [
     'Acción',
     'Ajedrez',
@@ -269,31 +270,79 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8.0,
-                    runSpacing: 0.0,
-                    children: _tagsDisponibles.map((tag) {
-                      // Aquí comparamos con _tagsSeleccionats, que ahora ya tiene los datos iniciales
-                      final isSelected = _tagsSeleccionats.contains(tag);
-
-                      return FilterChip(
-                        label: Text(tag),
-                        selected: isSelected,
-                        selectedColor: colorScheme.secondary.withValues(
-                          alpha: 0.3,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Els teus interessos",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        checkmarkColor: colorScheme.secondary,
-                        onSelected: (bool selected) {
-                          setState(() {
-                            if (selected) {
-                              _tagsSeleccionats.add(tag);
-                            } else {
-                              _tagsSeleccionats.remove(tag);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
+                        const SizedBox(height: 10),
+                        // BUSCADOR
+                        TextField(
+                          decoration: InputDecoration(
+                            hintText: "Cerca interessos...",
+                            prefixIcon: const Icon(Icons.search),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                          onChanged: (val) =>
+                              setState(() => _busquedaTags = val),
+                        ),
+                        const SizedBox(height: 10),
+                        // CONTENEDOR CON SCROLL
+                        Container(
+                          height: 200,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(8),
+                            child: Wrap(
+                              spacing: 8.0,
+                              children: _tagsDisponibles
+                                  .where(
+                                    (tag) => tag.toLowerCase().contains(
+                                      _busquedaTags.toLowerCase(),
+                                    ),
+                                  )
+                                  .map((tag) {
+                                    final isSelected = _tagsSeleccionats
+                                        .contains(tag);
+                                    return FilterChip(
+                                      label: Text(tag),
+                                      selected: isSelected,
+                                      selectedColor: colorScheme.secondary
+                                          .withValues(alpha: 0.3),
+                                      checkmarkColor: colorScheme.secondary,
+                                      onSelected: (bool selected) {
+                                        setState(() {
+                                          if (selected) {
+                                            _tagsSeleccionats.add(tag);
+                                          } else {
+                                            _tagsSeleccionats.remove(tag);
+                                          }
+                                        });
+                                      },
+                                    );
+                                  })
+                                  .toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

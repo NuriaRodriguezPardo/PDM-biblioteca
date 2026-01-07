@@ -56,53 +56,46 @@ Future<User?> signIn(String email, String password) async {
 }
 
 // --- GOOGLE SIGN IN ---
-Future<User?> signInWithGoogle() async {
+Future<Map<String, dynamic>?> signInWithGoogle() async {
   try {
-    // 1. FORZAR CIERRE DE SESIÓN PREVIO (para que pida elegir cuenta)
+    // ESTA ES LA CLAVE: Forzamos que Google se desconecte antes de pedir el login
+    // Así siempre te preguntará qué cuenta quieres usar.
     await _googleSignIn.signOut();
 
-    // 2. Iniciar el flujo de Google
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
     if (googleUser == null) return null;
 
     final GoogleSignInAuthentication googleAuth =
         await googleUser.authentication;
-
     final AuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
-    // 3. Iniciar sesión en Firebase Auth
     final UserCredential userCredential = await _auth.signInWithCredential(
       credential,
     );
     final User? user = userCredential.user;
 
     if (user != null) {
-      // 4. COMPROBAR SI YA EXISTE EN FIRESTORE
-      final docRef = FirebaseFirestore.instance
-          .collection('usuaris')
-          .doc(user.uid);
+      final docRef = _db.collection('usuaris').doc(user.uid);
       final docSnap = await docRef.get();
 
-      if (!docSnap.exists) {
-        // 5. SI NO EXISTE, CREAR EL DOCUMENTO USANDO TU CLASE 'Usuari'
-        // Extraemos el nombre (Google suele dar el nombre completo)
-        String nombreCompleto = user.displayName ?? "Usuari Google";
+      bool esNuevo = !docSnap.exists;
 
+      if (esNuevo) {
         Usuari nouUsuari = Usuari(
           id: user.uid,
-          nom: nombreCompleto,
+          nom: user.displayName ?? "Usuari Google",
           email: user.email,
           fotoUrl: user.photoURL,
-          tags: [], // Lista vacía por defecto
+          tags: [],
         );
-
-        await _db.collection('usuaris').doc(user.uid).set(nouUsuari.toJson());
+        await docRef.set(nouUsuari.toJson());
       }
+      return {'user': user, 'esNuevo': esNuevo};
     }
-    return user;
+    return null;
   } catch (e) {
     print("Error Google Sign-In: $e");
     return null;

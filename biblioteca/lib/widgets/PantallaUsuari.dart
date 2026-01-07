@@ -2,6 +2,7 @@ import 'package:biblioteca/usuarios/auth.dart';
 import 'package:biblioteca/widgets/PantallaPerfilUsuari.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Necesario para obtener el ID actual
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../clases/usuari.dart';
 import '../clases/llibre.dart';
 import 'PantallaLlibre.dart';
@@ -43,44 +44,52 @@ class _PantallaUsuariState extends State<PantallaUsuari>
   }
 
   Future<void> _cargarDatos() async {
-    // Si pasamos un usuario por constructor, visualizamos ese (perfil de otro)
-    if (widget.usuari != null) {
-      setState(() {
-        _usuariVisualitzat = widget.usuari;
-        _isLoading = false;
-      });
-      return;
-    }
-
-    // Si no hay usuario en el constructor, cargamos el nuestro de Firebase
     setState(() => _isLoading = true);
-    try {
-      final datos = await obtenerDatosPerfil();
-      if (datos != null) {
-        setState(() {
-          _usuariVisualitzat = datos;
-          _isLoading = false;
-        });
-      } else {
-        _manejarUsuarioNoEncontrado();
-      }
-    } catch (e) {
-      debugPrint("Error cargando perfil: $e");
-      setState(() => _isLoading = false);
-    }
-  }
 
-  void _manejarUsuarioNoEncontrado() {
-    final userAuth = FirebaseAuth.instance.currentUser;
-    setState(() {
-      _usuariVisualitzat = Usuari(
-        id: userAuth?.uid ?? 'anonim',
-        nom: userAuth?.displayName ?? 'Usuari Nou',
-        email: userAuth?.email,
-        fotoUrl: userAuth?.photoURL,
-      );
-      _isLoading = false;
-    });
+    // 1. Obtenemos el ID del usuario a visualizar
+    final String userId =
+        widget.usuari?.id ?? FirebaseAuth.instance.currentUser?.uid ?? "";
+
+    if (userId.isNotEmpty) {
+      try {
+        // 2. Consultamos Firestore para tener los datos más recientes (especialmente tags)
+        final doc = await FirebaseFirestore.instance
+            .collection('usuaris')
+            .doc(userId)
+            .get();
+
+        if (doc.exists) {
+          setState(() {
+            _usuariVisualitzat = Usuari.fromJson(doc.data()!);
+          });
+        } else {
+          // --- MANEJO DE USUARIO NO ENCONTRADO ---
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("No s'ha trobat la informació de l'usuari."),
+              ),
+            );
+            // Si es el perfil propio y no existe, cerramos sesión por seguridad
+            if (widget.usuari == null) {
+              await signOut();
+              Navigator.pushReplacementNamed(context, PantallaLogin.route);
+            }
+          }
+        }
+      } catch (e) {
+        print("Error carregant usuari: $e");
+        // Si falla la red, usamos el que tenemos por parámetro como respaldo
+        _usuariVisualitzat = widget.usuari;
+      }
+    } else {
+      // --- SI NO HAY ID (USUARIO NO LOGUEADO) ---
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, PantallaLogin.route);
+      }
+    }
+
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override

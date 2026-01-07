@@ -366,6 +366,7 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
     'Época',
   ];
 
+  String _busqueda = ""; // Variable para el buscador
   final List<String> _tagsSeleccionats = [];
 
   Future<void> _registre() async {
@@ -472,35 +473,76 @@ class _PantallaRegistrarseState extends State<PantallaRegistrarse> {
               ),
 
               const SizedBox(height: 30),
+              // 1. TÍTULO Y BUSCADOR
               const Text(
-                'Què t\'agrada llegir? (Interessos)',
+                "Tria els teus interessos:",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-
-              Wrap(
-                spacing: 8.0,
-                runSpacing: 0.0,
-                children: _tagsDisponibles.map((tag) {
-                  final isSelected = _tagsSeleccionats.contains(tag);
-                  return FilterChip(
-                    label: Text(tag),
-                    selected: isSelected,
-                    selectedColor: colorScheme.secondary.withValues(alpha: 0.3),
-                    checkmarkColor: colorScheme.secondary,
-                    onSelected: (bool selected) {
-                      setState(() {
-                        if (selected) {
-                          _tagsSeleccionats.add(tag);
-                        } else {
-                          _tagsSeleccionats.remove(tag);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: "Cerca interessos...",
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                ),
+                onChanged: (val) => setState(() => _busqueda = val),
               ),
+              const SizedBox(height: 10),
 
+              // 2. CUADRO CON SCROLL INTERNO
+              Container(
+                height: 250, // Altura fija para que no ocupe toda la pantalla
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                padding: const EdgeInsets.all(8),
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 0,
+                    children: _tagsDisponibles
+                        .where(
+                          (tag) => tag.toLowerCase().contains(
+                            _busqueda.toLowerCase(),
+                          ),
+                        )
+                        .map((tag) {
+                          final isSelected = _tagsSeleccionats.contains(tag);
+                          return FilterChip(
+                            label: Text(tag, style: TextStyle(fontSize: 12)),
+                            selected: isSelected,
+                            onSelected: (bool selected) {
+                              setState(() {
+                                if (selected) {
+                                  _tagsSeleccionats.add(tag);
+                                } else {
+                                  _tagsSeleccionats.remove(tag);
+                                }
+                              });
+                            },
+                            selectedColor: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.2),
+                            checkmarkColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          );
+                        })
+                        .toList(),
+                  ),
+                ),
+              ),
               const SizedBox(height: 40),
 
               SizedBox(
