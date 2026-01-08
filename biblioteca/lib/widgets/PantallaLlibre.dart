@@ -174,6 +174,7 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
     );
   }
 
+  // --- ENVIAR VALORACIÓN A TIEMPO REAL ---
   void _enviarValoracio() async {
     if (currentUser == null || _reviewController.text.isEmpty) return;
 
@@ -189,14 +190,18 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
       idLlibre: widget.llibre.id,
     );
 
+    // 1. ACTUALIZACIÓN LOCAL INMEDIATA (UI)
     setState(() {
-      // 1. Añadir a la lista local del libro si no existe
+      // Añadimos el ID a la lista del libro si no está
       if (!widget.llibre.valoracions.contains(nuevoId)) {
         widget.llibre.valoracions.add(nuevoId);
       }
 
-      // 2. Actualizar lista global para refresco inmediato
-      int idx = llistaValoracionsGlobal.indexWhere((v) => v.id == nuevoId);
+      // Actualizamos la lista global de memoria
+      int idx = llistaValoracionsGlobal.indexWhere(
+        (v) => v.idUsuari == currentUser && v.idLlibre == widget.llibre.id,
+      );
+
       if (idx != -1) {
         llistaValoracionsGlobal[idx] = nuevaVal;
       } else {
@@ -204,23 +209,37 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
       }
     });
 
-    // 3. Guardar la valoración en su propia colección
-    await FirebaseFirestore.instance
-        .collection('valoracions')
-        .doc(nuevoId.toString())
-        .set(nuevaVal.toJson());
+    try {
+      // 2. FIREBASE: Guardar la valoración
+      // Usamos el .toString() del ID como nombre de documento para evitar duplicados del mismo usuario en el mismo libro
+      await FirebaseFirestore.instance
+          .collection('valoracions')
+          .doc(nuevoId.toString())
+          .set(nuevaVal.toJson());
 
-    // 4. ACTUALIZAR EL LIBRO EN FIREBASE con la nueva lista de IDs
-    await FirebaseFirestore.instance
-        .collection('libros')
-        .doc(widget.llibre.id)
-        .update({
-          'valoraciones': widget.llibre.valoracions
-              .map((v) => v.toString())
-              .toList(),
-        });
+      // 3. FIREBASE: Actualizar la lista de IDs en el documento del libro
+      await FirebaseFirestore.instance
+          .collection('libros')
+          .doc(widget.llibre.id)
+          .update({
+            'valoraciones': widget.llibre.valoracions
+                .map((v) => v.toString())
+                .toList(),
+          });
+
+      // Registrar en el historial local
+      registrarActivitat(
+        "Nova valoració",
+        "Has valorat ${widget.llibre.titol} amb ${_novaPuntuacio.toInt()} estrelles",
+        Icons.star,
+      );
+    } catch (e) {
+      print("Error al enviar valoració: $e");
+      // Opcional: Podrías revertir el setState aquí si falla
+    }
 
     _reviewController.clear();
+    FocusScope.of(context).unfocus(); // Cierra el teclado
   }
 
   bool _estaAPendents() {
@@ -665,22 +684,30 @@ class _PantallaLlibreState extends State<PantallaLlibre> {
               return ListTile(
                 title: Text(llista.nom),
                 onTap: () async {
+                  // 1. Actualización local inmediata (UI)
                   setState(() {
                     if (!llista.llibres.contains(widget.llibre.id)) {
                       llista.llibres.add(widget.llibre.id);
                     }
                   });
-                  // Sincronizar la lista personalizada en Firebase
+
+                  // 2. Firebase
                   await FirebaseFirestore.instance
                       .collection('llistes_personalitzades')
-                      .doc(
-                        llista.id,
-                      ) // Asegúrate que tu clase LlistaPersonalitzada tenga el campo id
+                      .doc(llista.id)
                       .update({'llibres': llista.llibres});
+
+                  // 3. Sincronizar con la lista global de memoria para que otras pantallas lo vean
+                  int indexGlobal = llistesPersonalitzadesGlobals.indexWhere(
+                    (l) => l.id == llista.id,
+                  );
+                  if (indexGlobal != -1) {
+                    llistesPersonalitzadesGlobals[indexGlobal] = llista;
+                  }
 
                   registrarActivitat(
                     "Afegit a llista",
-                    "${widget.llibre.titol} afegit a la llista: ${llista.nom}",
+                    "Has afegit '${widget.llibre.titol}' a la llista '${llista.nom}'",
                     Icons.playlist_add,
                   );
 

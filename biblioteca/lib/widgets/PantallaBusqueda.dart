@@ -4,6 +4,7 @@ import '../clases/llibre.dart';
 import '../clases/usuari.dart';
 import 'PantallaLlibre.dart';
 import '../InternalLists.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PantallaBusqueda extends StatefulWidget {
   const PantallaBusqueda({super.key});
@@ -29,7 +30,7 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
             llibre.autor.toLowerCase().contains(queryLower);
       }).toList();
     }
-
+    /*
     // LÓGICA BÚSQUEDA USUARIOS
     List<Usuari> resultadosUsuarios;
     if (queryUsuarios.isEmpty) {
@@ -41,7 +42,7 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
             u.email!.toLowerCase().contains(queryLower);
       }).toList();
     }
-
+*/
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -76,7 +77,7 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
                   hint: 'Nom o correu...',
                   onChanged: (value) => setState(() => queryUsuarios = value),
                 ),
-                Expanded(child: _buildListaUsuarios(resultadosUsuarios)),
+                Expanded(child: _buildListaUsuarios()),
               ],
             ),
           ],
@@ -132,39 +133,67 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
   }
 
   // Vista de Lista de Usuarios (Nueva sección)
-  Widget _buildListaUsuarios(List<Usuari> usuarios) {
-    if (usuarios.isEmpty) return _buildEmptyState();
-    return ListView.builder(
-      itemCount: usuarios.length,
-      itemBuilder: (context, index) {
-        final user = usuarios[index];
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Colors.blueAccent,
-            // Intentamos cargar la imagen de la red
-            backgroundImage: (user.fotoUrl != null && user.fotoUrl!.isNotEmpty)
-                ? NetworkImage(user.fotoUrl!)
-                : null,
-            // Si no hay imagen (backgroundImage es null), se muestra el child (la inicial)
-            child: (user.fotoUrl == null || user.fotoUrl!.isEmpty)
-                ? Text(
-                    user.nom[0].toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : null,
-          ),
-          title: Text(user.nom),
-          subtitle: Text(user.email!),
-          trailing: const Icon(Icons.person_add_alt_1, color: Colors.blue),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PantallaPerfilUsuari(usuari: user),
+  Widget _buildListaUsuarios() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('usuaris').snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData)
+          return const Center(child: CircularProgressIndicator());
+
+        // Convertimos documentos a objetos Usuari
+        List<Usuari> todosLosUsuarios = snapshot.data!.docs
+            .map((doc) => Usuari.fromJson(doc.data() as Map<String, dynamic>))
+            .toList();
+
+        // Aplicamos tu filtro original sobre la lista a tiempo real
+        List<Usuari> resultadosUsuarios;
+        if (queryUsuarios.isEmpty) {
+          resultadosUsuarios = todosLosUsuarios.take(5).toList();
+        } else {
+          resultadosUsuarios = todosLosUsuarios.where((user) {
+            final queryLower = queryUsuarios.toLowerCase();
+            return user.nom.toLowerCase().contains(queryLower) ||
+                (user.email != null &&
+                    user.email!.toLowerCase().contains(queryLower));
+          }).toList();
+        }
+
+        if (resultadosUsuarios.isEmpty) return _buildEmptyState();
+
+        return ListView.builder(
+          itemCount: resultadosUsuarios.length,
+          itemBuilder: (context, index) {
+            final user = resultadosUsuarios[index];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.blueAccent,
+                // Intentamos cargar la imagen de la red
+                backgroundImage:
+                    (user.fotoUrl != null && user.fotoUrl!.isNotEmpty)
+                    ? NetworkImage(user.fotoUrl!)
+                    : null,
+                // Si no hay imagen (backgroundImage es null), se muestra el child (la inicial)
+                child: (user.fotoUrl == null || user.fotoUrl!.isEmpty)
+                    ? Text(
+                        user.nom[0].toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : null,
               ),
+              title: Text(user.nom),
+              subtitle: Text(user.email!),
+              trailing: const Icon(Icons.person_add_alt_1, color: Colors.blue),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PantallaPerfilUsuari(usuari: user),
+                  ),
+                );
+              },
             );
           },
         );

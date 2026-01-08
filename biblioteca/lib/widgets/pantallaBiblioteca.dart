@@ -180,20 +180,26 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
   Widget _buildVistaLlistes() {
     return StreamBuilder<QuerySnapshot>(
       // Escuchamos solo las listas donde el usuario actual es miembro
+      // Esto garantiza que si alguien te añade a una lista o borra un libro,
+      // la pantalla se refresque sola sin llistaLlibresGlobal ni setsState manuales.
       stream: FirebaseFirestore.instance
           .collection('llistes_personalitzades')
           .where('usuaris', arrayContains: currentUser)
           .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.hasError)
+        if (snapshot.hasError) {
           return const Center(child: Text('Error al carregar'));
+        }
+
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
         final docs = snapshot.data!.docs;
-        if (docs.isEmpty)
+
+        if (docs.isEmpty) {
           return const Center(child: Text('No has creat cap llista'));
+        }
 
         return ListView.builder(
           padding: const EdgeInsets.all(10),
@@ -209,6 +215,7 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
                 title: Text(llista.nom),
                 subtitle: Text('${llista.llibres.length} llibres'),
                 trailing: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     IconButton(
                       icon: const Icon(Icons.person_add_alt_1, size: 20),
@@ -226,8 +233,11 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
                   ],
                 ),
                 children: llista.llibres.map((id) {
+                  // Buscamos el libro en la lista global (que se mantiene estática como pediste)
                   final llibre = getLlibreById(id);
+
                   if (llibre == null) return const SizedBox.shrink();
+
                   return ListTile(
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(4),
@@ -451,7 +461,6 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
               const SizedBox(height: 20),
 
               // SECCIÓN DE AMIGOS
-              // ... dentro del StatefulBuilder del modal ...
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -479,8 +488,10 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
                       .collection('usuaris')
                       .snapshots(),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData)
+                    if (snapshot.hasError) return const Text('Error');
+                    if (!snapshot.hasData) {
                       return const Center(child: CircularProgressIndicator());
+                    }
 
                     // Convertimos los documentos en objetos Usuari dinámicamente
                     final usuariosRealtime = snapshot.data!.docs.map((doc) {
@@ -514,15 +525,25 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
                         return CheckboxListTile(
                           title: Text(amic.nom),
                           secondary: CircleAvatar(
-                            backgroundImage: NetworkImage(amic.fotoUrl ?? ''),
+                            // Mantenemos la lógica de imagen/inicial por si no hay URL
+                            backgroundImage:
+                                (amic.fotoUrl != null &&
+                                    amic.fotoUrl!.isNotEmpty)
+                                ? NetworkImage(amic.fotoUrl!)
+                                : null,
+                            child:
+                                (amic.fotoUrl == null || amic.fotoUrl!.isEmpty)
+                                ? Text(amic.nom[0].toUpperCase())
+                                : null,
                           ),
                           value: estaSeleccionat,
                           onChanged: (bool? value) {
                             setModalState(() {
-                              if (value == true)
+                              if (value == true) {
                                 amicsSeleccionats.add(amic.id);
-                              else
+                              } else {
                                 amicsSeleccionats.remove(amic.id);
+                              }
                             });
                           },
                         );
@@ -537,8 +558,9 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () async {
-                    if (_nomController.text.isEmpty || currentUser == null)
+                    if (_nomController.text.isEmpty || currentUser == null) {
                       return;
+                    }
 
                     final docRef = FirebaseFirestore.instance
                         .collection('llistes_personalitzades')
@@ -559,8 +581,11 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
 
                     await docRef.set(nova.toJson());
 
-                    setState(() => llistesPersonalitzadesGlobals.add(nova));
-                    Navigator.pop(context);
+                    // IMPORTANTE: Como ahora usas StreamBuilder en la vista principal,
+                    // NO necesitas actualizar manualmente llistesPersonalitzadesGlobals.
+                    // Firebase emitirá un nuevo evento y la UI se actualizará sola.
+
+                    if (context.mounted) Navigator.pop(context);
                   },
                   child: const Text('Crear Llista'),
                 ),

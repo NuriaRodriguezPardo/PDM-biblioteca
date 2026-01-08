@@ -458,20 +458,23 @@ class _PantallaUsuariState extends State<PantallaUsuari>
                                   Icons.arrow_forward_ios,
                                   size: 16,
                                 ),
-                                onTap: () {
+                                onTap: () async {
                                   Navigator.pop(context); // Cierra el modal
 
-                                  // Si el usuario clickeado es el mismo que ya estamos viendo, no hacemos nada
                                   if (_usuariVisualitzat?.id == usuari.id)
                                     return;
 
-                                  Navigator.push(
+                                  // CAMBIO AQUÍ: Esperamos a que el usuario vuelva de la otra pantalla
+                                  await Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) =>
                                           PantallaPerfilUsuari(usuari: usuari),
                                     ),
                                   );
+
+                                  // Al volver, refrescamos los datos de Firebase para ver los nuevos contadores
+                                  _cargarDatos();
                                 },
                               );
                             },

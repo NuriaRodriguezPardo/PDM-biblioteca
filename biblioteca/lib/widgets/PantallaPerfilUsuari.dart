@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../clases/usuari.dart';
 import '../InternalLists.dart';
 import 'PantallaLlibre.dart';
+import '../clases/carregaDeHistorial.dart';
 
 class PantallaPerfilUsuari extends StatefulWidget {
   final Usuari usuari;
@@ -24,6 +25,36 @@ class _PantallaPerfilUsuariState extends State<PantallaPerfilUsuari> {
     super.initState();
     // Comprobar si el usuario actual ya sigue a este perfil
     _comprobarSeguimiento();
+    _cargarDatosPerfil();
+  }
+
+  Future<void> _cargarDatosPerfil() async {
+    try {
+      // 1. Obtenemos los datos más recientes de este usuario
+      final doc = await FirebaseFirestore.instance
+          .collection('usuaris')
+          .doc(widget.usuari.id)
+          .get();
+
+      if (doc.exists) {
+        final usuariFresca = Usuari.fromJson(doc.data()!);
+
+        // 2. Sincronizamos con la lista global de InternalLists
+        int index = llistaUsuarisGlobal.indexWhere(
+          (u) => u.id == widget.usuari.id,
+        );
+        if (index != -1) {
+          llistaUsuarisGlobal[index] = usuariFresca;
+        } else {
+          llistaUsuarisGlobal.add(usuariFresca);
+        }
+
+        // 3. Refrescamos la pantalla para que 'usuariActualitzat' tome los nuevos datos
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      print("Error actualitzant perfil: $e");
+    }
   }
 
   void _comprobarSeguimiento() {
@@ -47,6 +78,7 @@ class _PantallaPerfilUsuariState extends State<PantallaPerfilUsuari> {
   }
 
   // --- LÓGICA DE FIREBASE PARA SEGUIR/DEJAR DE SEGUIR ---
+  // --- LÓGICA DE FIREBASE PARA SEGUIR/DEJAR DE SEGUIR A TIEMPO REAL ---
   Future<void> _toggleSeguimiento() async {
     if (currentUserId == null) return;
 
@@ -57,11 +89,15 @@ class _PantallaPerfilUsuariState extends State<PantallaPerfilUsuari> {
         .collection('usuaris')
         .doc(widget.usuari.id);
 
+    // Buscamos nuestro usuario en la lista global para actualizarlo en memoria
+    final yoLocal = getUsuariById(currentUserId!);
+
     if (!siguiendo) {
-      // SEGUIR
+      // --- SEGUIR ---
       setState(() {
         siguiendo = true;
         widget.usuari.seguidors.add(currentUserId!);
+        yoLocal?.seguint.add(widget.usuari.id);
       });
 
       await miDoc.update({
@@ -70,11 +106,19 @@ class _PantallaPerfilUsuariState extends State<PantallaPerfilUsuari> {
       await suDoc.update({
         'seguidors': FieldValue.arrayUnion([currentUserId]),
       });
+
+      registrarActivitat(
+        "Nou seguit",
+        "Has començat a seguir a ${widget.usuari.nom}",
+        Icons.person_add,
+      );
     } else {
-      // DEJAR DE SEGUIR
+      // --- DEJAR DE SEGUIR ---
       setState(() {
         siguiendo = false;
         widget.usuari.seguidors.remove(currentUserId);
+        // Actualización en memoria local inmediata
+        yoLocal?.seguint.remove(widget.usuari.id);
       });
 
       await miDoc.update({
@@ -83,11 +127,25 @@ class _PantallaPerfilUsuariState extends State<PantallaPerfilUsuari> {
       await suDoc.update({
         'seguidors': FieldValue.arrayRemove([currentUserId]),
       });
+
+      registrarActivitat(
+        "Deixar de seguir",
+        "Has deixat de seguir a ${widget.usuari.nom}",
+        Icons.person_remove,
+      );
+    }
+
+    // --- CORRECCIÓN: Sincronizar con la lista global de InternalLists ---
+    // Esto asegura que al volver a la pantalla anterior, los datos estén actualizados
+    int index = llistaUsuarisGlobal.indexWhere((u) => u.id == widget.usuari.id);
+    if (index != -1) {
+      llistaUsuarisGlobal[index] = widget.usuari;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final usuariActualitzat = getUsuariById(widget.usuari.id) ?? widget.usuari;
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -168,12 +226,15 @@ class _PantallaPerfilUsuariState extends State<PantallaPerfilUsuari> {
                       children: [
                         _buildStat(
                           "Seguidors",
-                          widget.usuari.seguidors.length.toString(),
+                          usuariActualitzat.seguidors.length.toString(),
                         ),
-                        _buildStat("Amics", contadorAmigos.toString()),
+                        _buildStat(
+                          "Seguint",
+                          usuariActualitzat.seguint.length.toString(),
+                        ),
                         _buildStat(
                           "Llegits",
-                          widget.usuari.llegits.length.toString(),
+                          usuariActualitzat.llegits.length.toString(),
                         ),
                       ],
                     ),
