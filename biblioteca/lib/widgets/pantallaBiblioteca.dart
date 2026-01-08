@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../clases/llista_personalitzada.dart';
 import 'PantallaLlibre.dart';
 import '../InternalLists.dart';
+import '../clases/usuari.dart';
 
 class BibliotecaScreen extends StatefulWidget {
   const BibliotecaScreen({Key? key}) : super(key: key);
@@ -295,33 +296,55 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
                 onChanged: (val) =>
                     setModalState(() => filtreCerca = val.toLowerCase()),
               ),
+              // ... dentro del StatefulBuilder de _gestionarUsuarisLlista ...
               SizedBox(
                 height: 200,
-                child: ListView(
-                  children: llistaUsuarisGlobal
-                      .where((u) {
-                        bool esAmic =
-                            u.seguidors.contains(currentUser) &&
-                            u.seguint.contains(currentUser);
-                        return esAmic &&
-                            u.nom.toLowerCase().contains(filtreCerca) &&
-                            u.id != currentUser;
-                      })
-                      .map((amic) {
-                        return CheckboxListTile(
-                          title: Text(amic.nom),
-                          value: seleccionats.contains(amic.id),
-                          onChanged: (val) {
-                            setModalState(() {
-                              if (val == true)
-                                seleccionats.add(amic.id);
-                              else
-                                seleccionats.remove(amic.id);
-                            });
-                          },
-                        );
-                      })
-                      .toList(),
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('usuaris')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData)
+                      return const Center(child: CircularProgressIndicator());
+
+                    final usuariosRealtime = snapshot.data!.docs.map((doc) {
+                      return Usuari.fromJson(
+                        doc.data() as Map<String, dynamic>,
+                      );
+                    }).toList();
+
+                    return ListView(
+                      children: usuariosRealtime
+                          .where((u) {
+                            bool esAmic =
+                                u.seguidors.contains(currentUser) &&
+                                u.seguint.contains(currentUser);
+                            return esAmic &&
+                                u.nom.toLowerCase().contains(filtreCerca) &&
+                                u.id != currentUser;
+                          })
+                          .map((amic) {
+                            return CheckboxListTile(
+                              title: Text(amic.nom),
+                              secondary: CircleAvatar(
+                                backgroundImage: NetworkImage(
+                                  amic.fotoUrl ?? '',
+                                ),
+                              ),
+                              value: seleccionats.contains(amic.id),
+                              onChanged: (val) {
+                                setModalState(() {
+                                  if (val == true)
+                                    seleccionats.add(amic.id);
+                                  else
+                                    seleccionats.remove(amic.id);
+                                });
+                              },
+                            );
+                          })
+                          .toList(),
+                    );
+                  },
                 ),
               ),
               ElevatedButton(
@@ -428,6 +451,7 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
               const SizedBox(height: 20),
 
               // SECCIÓN DE AMIGOS
+              // ... dentro del StatefulBuilder del modal ...
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -447,25 +471,43 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
               ),
               const SizedBox(height: 10),
 
-              // Lista de amigos (filtrada)
+              // --- LISTA A TIEMPO REAL ---
               SizedBox(
                 height: 150,
-                child: ListView(
-                  children: llistaUsuarisGlobal
-                      .where((u) {
-                        // Lógica de "Amigo": Me sigue, lo sigo y coincide con la búsqueda
-                        bool esAmic =
-                            currentUser != null &&
-                            u.seguidors.contains(currentUser) &&
-                            u.seguint.contains(
-                              currentUser,
-                            ); // Ajusta según tu modelo
-                        bool coincideNom = u.nom.toLowerCase().contains(
-                          filtreCerca,
-                        );
-                        return esAmic && coincideNom && u.id != currentUser;
-                      })
-                      .map((amic) {
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('usuaris')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData)
+                      return const Center(child: CircularProgressIndicator());
+
+                    // Convertimos los documentos en objetos Usuari dinámicamente
+                    final usuariosRealtime = snapshot.data!.docs.map((doc) {
+                      return Usuari.fromJson(
+                        doc.data() as Map<String, dynamic>,
+                      );
+                    }).toList();
+
+                    final amicsFiltrats = usuariosRealtime.where((u) {
+                      // Lógica de Amigo: Reciprocidad y filtro de nombre
+                      bool esAmic =
+                          currentUser != null &&
+                          u.seguidors.contains(currentUser) &&
+                          u.seguint.contains(currentUser);
+
+                      bool coincideNom = u.nom.toLowerCase().contains(
+                        filtreCerca,
+                      );
+                      return esAmic && coincideNom && u.id != currentUser;
+                    }).toList();
+
+                    if (amicsFiltrats.isEmpty) {
+                      return const Center(child: Text("No s'han trobat amics"));
+                    }
+
+                    return ListView(
+                      children: amicsFiltrats.map((amic) {
                         final estaSeleccionat = amicsSeleccionats.contains(
                           amic.id,
                         );
@@ -484,8 +526,9 @@ class _BibliotecaScreenState extends State<BibliotecaScreen> {
                             });
                           },
                         );
-                      })
-                      .toList(),
+                      }).toList(),
+                    );
+                  },
                 ),
               ),
 
